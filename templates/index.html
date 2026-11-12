@@ -1,0 +1,2017 @@
+<!DOCTYPE html>
+<html lang="ta">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=5.0, viewport-fit=cover">
+  <title>RuralCare – Verified Care Journey</title>
+  
+  <meta name="description" content="RuralCare connects rural patients, village kiosks, verified healthcare facilities, and local transport for verified healthcare journeys.">
+  <meta name="theme-color" content="#0D9488">
+  <link rel="manifest" href="/manifest.json">
+  <link rel="icon" type="image/svg+xml" href="/static/icons/icon-192.svg">
+  <link rel="apple-touch-icon" href="/static/icons/icon-192.svg">
+
+  <link rel="stylesheet" href="/static/css/style.css">
+</head>
+<body>
+
+  <!-- =========================================================================
+       EMERGENCY RIBBON (Always visible at very top)
+       ========================================================================= -->
+  <div class="emergency-ribbon" role="alert">
+    <div class="emergency-ribbon-inner">
+      <div>
+        <strong data-i18n="emergency_banner_title">Medical Emergencies:</strong>
+        <span data-i18n="emergency_banner_desc">Call 108 for Ambulance or 112 for General Emergency immediately. RuralCare is not an emergency dispatch service.</span>
+      </div>
+      <div style="display: flex; gap: 8px;">
+        <a href="tel:108" class="emergency-dial-pill">
+          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M22 16.92v3a2 2 0 0 1-2.18 2 19.79 19.79 0 0 1-8.63-3.07 19.5 19.5 0 0 1-6-6 19.79 19.79 0 0 1-3.07-8.67A2 2 0 0 1 4.11 2h3a2 2 0 0 1 2 1.72 12.84 12.84 0 0 0 .7 2.81 2 2 0 0 1-.45 2.11L8.09 9.91a16 16 0 0 0 6 6l1.27-1.27a2 2 0 0 1 2.11-.45 12.84 12.84 0 0 0 2.81.7A2 2 0 0 1 22 16.92z"/></svg>
+          108 (Ambulance)
+        </a>
+        <a href="tel:112" class="emergency-dial-pill" style="background-color: #B91C1C;">
+          112 (Emergency)
+        </a>
+      </div>
+    </div>
+  </div>
+
+  <!-- =========================================================================
+       ACCESSIBILITY TOOLBAR (Persistent across all kiosk workflows)
+       ========================================================================= -->
+  <div class="accessibility-toolbar" role="region" aria-label="Kiosk Accessibility Controls">
+    <div class="toolbar-inner">
+      <!-- Text Magnification Group: A-, 100%, 150%, 200%, A+ -->
+      <div class="toolbar-group">
+        <span class="toolbar-label" data-i18n="toolbar_text_size">Text Size:</span>
+        <button class="toolbar-btn" onclick="app.adjustFontSize(-1)" title="Smaller text" aria-label="Decrease text size">A-</button>
+        <button class="toolbar-btn active" id="btn-scale-100" onclick="app.setFontScale(1.0)" aria-label="Normal text size 100%">100%</button>
+        <button class="toolbar-btn" id="btn-scale-150" onclick="app.setFontScale(1.5)" aria-label="Enlarged text size 150%">150%</button>
+        <button class="toolbar-btn" id="btn-scale-200" onclick="app.setFontScale(2.0)" aria-label="Maximum magnification 200%">200%</button>
+        <button class="toolbar-btn" onclick="app.adjustFontSize(1)" title="Larger text" aria-label="Increase text size">A+</button>
+      </div>
+
+      <div class="toolbar-group">
+        <!-- High Contrast Toggle -->
+        <button class="toolbar-action-btn" id="btn-toggle-contrast" onclick="app.toggleHighContrast()" aria-pressed="false" aria-label="Toggle High Contrast Display">
+          <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><circle cx="12" cy="12" r="10"/><path d="M12 2a10 10 0 0 1 0 20z" fill="currentColor"/></svg>
+          <span data-i18n="btn_high_contrast">High Contrast</span>
+        </button>
+
+        <!-- Read Aloud Trigger & Persistent Playback Controls -->
+        <div style="display: inline-flex; align-items: center; gap: 6px; flex-wrap: wrap;">
+          <button class="toolbar-action-btn" id="btn-toolbar-speak" onclick="app.readAloudCurrentScreen()" aria-label="Read screen instructions aloud">
+            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polygon points="11 5 6 9 2 9 2 15 6 15 11 19 11 5"/><path d="M19.07 4.93a10 10 0 0 1 0 14.14M15.54 8.46a5 5 0 0 1 0 7.07"/></svg>
+            <span data-i18n="btn_read_aloud">Read Aloud</span>
+          </button>
+
+          <!-- Audio Playback Controller (shows during speech) -->
+          <div id="toolbar-speech-player" class="speech-player-controls hidden" role="group" aria-label="Audio Playback Controls">
+            <span id="speech-player-status" class="player-status-badge">Playing</span>
+            <span id="speech-active-voice-badge" style="font-size: 11px; padding: 2px 8px; background: #EEF2FF; color: #3730A3; border-radius: 4px; font-weight: 700; margin-right: 4px;">Voice: Detecting...</span>
+            <button type="button" class="player-btn" id="btn-speech-pause" onclick="voiceAssistant.pauseSpeech()" title="Pause speech">
+              ⏸️ <span data-i18n="audio_pause">Pause</span>
+            </button>
+            <button type="button" class="player-btn" id="btn-speech-stop" onclick="voiceAssistant.stopSpeech()" title="Stop speech">
+              ⏹️ <span data-i18n="audio_stop">Stop</span>
+            </button>
+            <button type="button" class="player-btn" id="btn-speech-repeat" onclick="voiceAssistant.repeatSpeech()" title="Repeat speech">
+              🔄 <span data-i18n="audio_repeat">Repeat</span>
+            </button>
+          </div>
+        </div>
+
+        <!-- Home / Start Over Button -->
+        <button class="toolbar-action-btn home-btn" onclick="app.kioskStartOver()" aria-label="Return to Kiosk Home">
+          <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M3 9l9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"/><polyline points="9 22 9 12 15 12 15 22"/></svg>
+          <span data-i18n="btn_kiosk_home">Kiosk Home</span>
+        </button>
+      </div>
+    </div>
+  </div>
+
+  <!-- =========================================================================
+       SITE HEADER & NAVIGATION
+       ========================================================================= -->
+  <header class="site-header">
+    <div class="header-container">
+      <div class="brand-area" onclick="app.showView('method-select')">
+        <div class="brand-logo">
+          <img src="/static/icons/icon-192.svg" alt="RuralCare Logo" width="44" height="44">
+        </div>
+        <div class="brand-titles">
+          <span class="brand-name" data-i18n="app_title">RuralCare</span>
+          <span class="brand-tagline" data-i18n="app_tagline">Verified Care Journey</span>
+        </div>
+      </div>
+
+      <div class="header-actions">
+        <!-- Network status badge -->
+        <div id="network-status-indicator" class="status-pill online">
+          <span class="dot"></span> <span data-i18n="online_badge">Online</span>
+        </div>
+
+        <!-- Pending sync alert badge (Always accessible) -->
+        <button id="pending-sync-alert" class="btn btn-outline" onclick="offlineDB.openSyncManager()" style="padding: 6px 12px; min-height: 38px; font-size: 13px; display: inline-flex; align-items: center; gap: 6px;" title="View offline queue and synchronize">
+          <span>📡</span>
+          <span id="pending-sync-badge" style="background: #E2E8F0; color: #1E293B; border-radius: 10px; padding: 1px 7px; font-size: 11px; font-weight: 800;">0</span>
+          <span data-i18n="sync_now_btn">Offline Sync</span>
+        </button>
+
+        <!-- Language switch trigger -->
+        <button class="btn btn-secondary" onclick="app.openLanguageModal()" style="padding: 8px 14px; min-height: 40px; font-size: 14px;">
+          <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><line x1="2" y1="12" x2="22" y2="12"/><path d="M12 2a15.3 15.3 0 0 1 4 10 15.3 15.3 0 0 1-4 10 15.3 15.3 0 0 1-4-10 15.3 15.3 0 0 1 4-10z"/></svg>
+          <span id="current-lang-label">தமிழ் / English</span>
+        </button>
+
+        <!-- Role / Portal switcher -->
+        <button class="btn btn-primary" onclick="app.openRoleModal()" style="padding: 8px 16px; min-height: 40px; font-size: 14px;">
+          <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"/><circle cx="12" cy="7" r="4"/></svg>
+          <span data-i18n="switch_role">Portals</span>
+        </button>
+
+        <!-- Citizen Profile / Login button -->
+        <button id="header-patient-btn" class="btn btn-outline" onclick="app.openPatientAuthModal()" style="padding: 8px 14px; min-height: 40px; font-size: 14px; font-weight: 700; border-color: #0D9488; color: #0D9488;">
+          <span>👤</span>
+          <span id="header-patient-label">Citizen Login</span>
+        </button>
+      </div>
+    </div>
+  </header>
+
+  <!-- Navigation tabs bar for quick accessibility (Desktop / Tablet view) -->
+  <nav id="desktop-nav" class="desktop-nav" style="background: #FFFFFF; border-bottom: 1px solid var(--border-light); padding: 8px 20px;">
+    <div style="max-width: 1200px; margin: 0 auto; display: flex; gap: 8px; overflow-x: auto;">
+      <button class="btn btn-secondary nav-tab-btn active" data-target-view="method-select" onclick="app.showView('method-select')">
+        <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M3 9l9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"/></svg>
+        <span>Home / Register</span>
+      </button>
+      <button class="btn btn-secondary nav-tab-btn" data-target-view="directory" onclick="app.showView('directory')">
+        <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M22 19a2 2 0 0 1-2 2H4a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h5l2 3h9a2 2 0 0 1 2 2z"/></svg>
+        <span data-i18n="directory_title">Facility Directory</span>
+      </button>
+      <button class="btn btn-secondary nav-tab-btn" data-target-view="track" onclick="app.showView('track')">
+        <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg>
+        <span data-i18n="track_title">Track Journey</span>
+      </button>
+      <button class="btn btn-secondary nav-tab-btn" data-target-view="facility-portal" onclick="app.showView('facility-portal')">
+        <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="2" y="7" width="20" height="14" rx="2" ry="2"/><path d="M16 21V5a2 2 0 0 0-2-2h-4a2 2 0 0 0-2 2v16"/></svg>
+        <span data-i18n="staff_dashboard_title">Facility Portal</span>
+      </button>
+      <button class="btn btn-secondary nav-tab-btn" data-target-view="driver-portal" onclick="app.showView('driver-portal')">
+        <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="1" y="3" width="15" height="13"/><polygon points="16 8 20 8 23 11 23 16 16 16 16 8"/><circle cx="5.5" cy="18.5" r="2.5"/><circle cx="18.5" cy="18.5" r="2.5"/></svg>
+        <span data-i18n="driver_dashboard_title">Driver Portal</span>
+      </button>
+      <button class="btn btn-secondary nav-tab-btn" data-target-view="admin-portal" onclick="app.showAdminRadarTab()">
+        <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><path d="M12 2a10 10 0 0 1 10 10"/><path d="M12 6a6 6 0 0 1 6 6"/><circle cx="12" cy="12" r="2"/></svg>
+        <span>Demand Radar</span>
+      </button>
+      <button class="btn btn-secondary nav-tab-btn" data-target-view="admin-portal" onclick="app.showView('admin-portal')">
+        <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 2v20M17 5H9.5a3.5 3.5 0 0 0 0 7h5a3.5 3.5 0 0 1 0 7H6"/></svg>
+        <span data-i18n="admin_dashboard_title">Admin</span>
+      </button>
+      <button id="nav-btn-offline-sync" class="btn btn-secondary nav-tab-btn" onclick="offlineDB.openSyncManager()">
+        <span style="font-size: 16px;">📡</span>
+        <span data-i18n="offline_sync_manager_title">Offline Sync</span>
+      </button>
+    </div>
+  </nav>
+
+  <!-- =========================================================================
+       PERSISTENT CONNECTIVITY & SYNCHRONIZATION STATUS BAR (FEATURE 7)
+       ========================================================================= -->
+  <aside id="connectivity-status-bar" class="connectivity-status-bar" role="region" aria-label="Connectivity & Synchronization Status">
+    <!-- Populated dynamically by offlineDB.updateStatusToolbar() -->
+  </aside>
+
+  <!-- =========================================================================
+       MAIN APPLICATION VIEWS CONTAINER
+       ========================================================================= -->
+  <main class="main-wrapper">
+
+    <!-- -----------------------------------------------------------------------
+         VIEW 1: SIMPLE TWO-MODE HOME SCREEN (VOICE-FIRST & ASSISTED KIOSK)
+         ----------------------------------------------------------------------- -->
+    <section id="view-method-select" class="app-view active">
+      <div class="card-panel" style="text-align: center; padding: 28px 20px; background: #FFFFFF; border: 2px solid var(--border-light);">
+        <span class="badge-tag badge-recommended" style="margin: 0 auto 10px auto;" data-i18n="demo_badge">SYNTHETIC DEMO PLATFORM</span>
+        
+        <!-- Persistent Citizen Account Banner (Phase 2 & 10) -->
+        <div id="citizen-account-banner" class="hidden" style="max-width: 780px; margin: 0 auto 18px auto; background: #F0FDF4; border: 2px solid #059669; border-radius: 8px; padding: 12px 18px; text-align: left; display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 10px;">
+          <div>
+            <span style="font-size: 11px; font-weight: 800; background: #DCFCE7; color: #166534; padding: 2px 8px; border-radius: 4px; text-transform: uppercase;">Active Citizen Session</span>
+            <div style="font-size: 16px; font-weight: 800; color: #064E3B; margin-top: 4px;">
+              👤 <span id="banner-patient-name">Patient</span> (<span id="banner-patient-id" style="font-family: monospace;">PID-2026-XXXX</span>) • <span id="banner-patient-village">Village</span>
+            </div>
+            <div id="banner-active-journey-text" style="font-size: 13px; color: #047857; margin-top: 2px;">No active journey</div>
+          </div>
+          <div style="display: flex; gap: 8px; flex-wrap: wrap;">
+            <button class="btn btn-primary" onclick="app.viewPatientActiveJourney()" style="padding: 6px 14px; font-size: 13px;">📍 Active Journey</button>
+            <button class="btn btn-outline" onclick="app.openPatientAuthModal()" style="padding: 6px 14px; font-size: 13px;">📜 Past Records</button>
+            <button class="btn btn-secondary" onclick="app.logoutPatient()" style="padding: 6px 14px; font-size: 13px;">Logout</button>
+          </div>
+        </div>
+
+        <div style="display: flex; justify-content: center; align-items: center; gap: 12px; margin-bottom: 6px; flex-wrap: wrap;">
+          <h1 class="page-title" style="margin-bottom: 0;" data-i18n="welcome_kiosk_title">Welcome to RuralCare</h1>
+          <button class="btn-speaker" onclick="app.speakText(window.i18n.t('welcome_spoken_dialogue'))" aria-label="Read Welcome Aloud">
+            <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polygon points="11 5 6 9 2 9 2 15 6 15 11 19 11 5"/><path d="M19.07 4.93a10 10 0 0 1 0 14.14M15.54 8.46a5 5 0 0 1 0 7.07"/></svg>
+            <span data-i18n="btn_read_aloud">Listen</span>
+          </button>
+        </div>
+        
+        <p class="page-subtitle" style="max-width: 680px; margin: 0 auto 24px auto;" data-i18n="access_subtitle">
+          Choose your preferred way to coordinate healthcare visits and transport today:
+        </p>
+
+        <!-- ===================================================================
+             TWO PRIMARY ENTRY MODES
+             =================================================================== -->
+        <div class="two-entry-modes-grid">
+          
+          <!-- MODE 1: VOICE-FIRST SELF-SERVICE MODE (PRIMARY) -->
+          <div class="entry-mode-card primary-voice">
+            <div class="entry-mode-header">
+              <span class="badge-tag badge-primary-mode" data-i18n="entry_mode_voice_badge">⭐ PRIMARY MODE</span>
+              <div class="voice-pulse-ring" style="margin: 12px auto;">
+                <button type="button" class="mic-btn pulse-listening" onclick="app.startVoiceFirstMode()" aria-label="Start Voice Assistant">
+                  <svg width="40" height="40" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M12 1a3 3 0 0 0-3 3v8a3 3 0 0 0 6 0V4a3 3 0 0 0-3-3z"/><path d="M19 10v2a7 7 0 0 1-14 0v-2"/><line x1="12" y1="19" x2="12" y2="23"/><line x1="8" y1="23" x2="16" y2="23"/></svg>
+                </button>
+              </div>
+              <h2 class="entry-mode-title" data-i18n="entry_mode_voice_title">Voice-First Self-Service</h2>
+              <p class="entry-mode-desc" data-i18n="entry_mode_voice_desc">
+                Speak naturally in Tamil or English to discover hospitals, book appointments, arrange transport, and track journeys.
+              </p>
+            </div>
+
+            <!-- 4 Spoken Capabilities List -->
+            <div class="voice-capabilities-list">
+              <div class="cap-item"><span>🏥</span> <strong>1. Hospital Discovery</strong> (மருத்துவமனை தேட)</div>
+              <div class="cap-item"><span>📅</span> <strong>2. Book Appointment</strong> (மருத்துவ ஆலோசனை)</div>
+              <div class="cap-item"><span>🛺</span> <strong>3. Arrange Transport</strong> (வாகன உதவி பெற)</div>
+              <div class="cap-item"><span>📍</span> <strong>4. Track Journey</strong> (பயண நிலை அறிய)</div>
+            </div>
+
+            <!-- Big Primary CTA Button -->
+            <div style="margin-top: 20px;">
+              <button class="btn btn-primary btn-lg voice-cta-btn" onclick="app.startVoiceFirstMode()" style="width: 100%; min-height: 52px; font-size: 17px; font-weight: 700;">
+                <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M12 1a3 3 0 0 0-3 3v8a3 3 0 0 0 6 0V4a3 3 0 0 0-3-3z"/><path d="M19 10v2a7 7 0 0 1-14 0v-2"/><line x1="12" y1="19" x2="12" y2="23"/><line x1="8" y1="23" x2="16" y2="23"/></svg>
+                <span data-i18n="entry_mode_voice_btn">🎙️ Start Voice Assistant</span>
+              </button>
+            </div>
+
+            <!-- Quick Voice Shortcuts -->
+            <div class="voice-shortcuts-row">
+              <span style="font-size: 12px; font-weight: 700; color: var(--text-muted);">Quick Voice Tasks:</span>
+              <button type="button" class="voice-chip-btn" onclick="app.startVoiceFirstMode('discovery')">🏥 மருத்துவமனை தேட</button>
+              <button type="button" class="voice-chip-btn" onclick="app.startVoiceFirstMode('booking')">📅 புதிய பதிவு</button>
+              <button type="button" class="voice-chip-btn" onclick="app.startVoiceFirstMode('tracking')">📍 பயண நிலை அறிய</button>
+            </div>
+          </div>
+
+          <!-- MODE 2: ASSISTED KIOSK MODE -->
+          <div class="entry-mode-card assisted-kiosk">
+            <div class="entry-mode-header">
+              <span class="badge-tag badge-self" data-i18n="entry_mode_kiosk_badge">Operator & Touch Kiosk</span>
+              <div style="font-size: 44px; margin: 12px auto;">🏛️</div>
+              <h2 class="entry-mode-title" data-i18n="entry_mode_kiosk_title">Assisted Kiosk Mode</h2>
+              <p class="entry-mode-desc" data-i18n="entry_mode_kiosk_desc">
+                For village kiosk operators, community health workers, and touch-screen self-service navigation.
+              </p>
+            </div>
+
+            <!-- Operator Credentials Box -->
+            <div class="operator-preview-box">
+              <label class="form-label" style="font-size: 13px;" data-i18n="operator_id_label">Kiosk Operator ID</label>
+              <input type="text" id="assisted-operator-id" class="form-input" value="KIOSK-OPERATOR-CP01" style="min-height: 40px; font-size: 14px;">
+              <label class="form-label" style="font-size: 13px; margin-top: 8px;" data-i18n="operator_name_label">Operator Full Name</label>
+              <input type="text" id="assisted-operator-name" class="form-input" value="Selvam (Chettipalayam Kiosk Lead)" style="min-height: 40px; font-size: 14px;">
+            </div>
+
+            <!-- Kiosk Action Buttons -->
+            <div style="display: flex; flex-direction: column; gap: 12px; margin-top: 16px;">
+              <button class="btn btn-success btn-lg" onclick="app.startAssistedRegistration()" style="width: 100%; min-height: 48px;">
+                <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M16 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="8.5" cy="7" r="4"/><line x1="20" y1="8" x2="20" y2="14"/><line x1="23" y1="11" x2="17" y2="11"/></svg>
+                <span data-i18n="entry_mode_kiosk_btn_operator">👤 Start with Operator</span>
+              </button>
+              
+              <button class="btn btn-outline btn-lg" onclick="app.openTouchVendingKiosk()" style="width: 100%; min-height: 48px;">
+                <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="5" y="2" width="14" height="20" rx="2" ry="2"/><line x1="12" y1="18" x2="12.01" y2="18"/></svg>
+                <span data-i18n="entry_mode_kiosk_btn_touch">📱 Open Touchscreen Kiosk</span>
+              </button>
+            </div>
+
+            <div style="margin-top: 16px; font-size: 12px; color: var(--text-muted); text-align: center;">
+              Supports both assisted coordination and visual touch navigation.
+            </div>
+          </div>
+
+        </div>
+
+        <!-- ===================================================================
+             TOUCHSCREEN HEALTHCARE KIOSK (6 VENDING SERVICE CARDS)
+             (Preserved intact for touch users / when requested)
+             =================================================================== -->
+        <div id="kiosk-touch-vending-panel" class="mt-32 pt-24" style="border-top: 2px dashed var(--border-light);">
+          <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 16px; flex-wrap: wrap; gap: 12px;">
+            <div style="text-align: left;">
+              <h2 style="font-size: 20px; font-weight: 700; margin-bottom: 4px;">Touchscreen Healthcare Kiosk Services</h2>
+              <p style="font-size: 14px; color: var(--text-muted); margin-bottom: 0;">Touch any service card below for direct visual workflow:</p>
+            </div>
+            <button class="btn btn-outline" onclick="app.startSelfServiceTouch()" style="padding: 6px 14px; font-size: 13px;">
+              Open 4-Step Touch Form →
+            </button>
+          </div>
+
+          <div class="vending-grid">
+            <!-- 1. Find a Hospital -->
+            <div class="vending-service-card" onclick="app.kioskSelectService('find_hospital')">
+              <div>
+                <div class="vending-card-header">
+                  <span class="vending-num-badge">1</span>
+                  <button class="btn-speaker" onclick="event.stopPropagation(); app.speakText(window.i18n.t('vending_find_hospital') + '. ' + window.i18n.t('vending_find_hospital_desc'))" aria-label="Listen to option 1">🔊</button>
+                </div>
+                <h3 class="vending-card-title" data-i18n="vending_find_hospital">1. Find a Hospital</h3>
+                <p class="vending-card-desc" data-i18n="vending_find_hospital_desc">Verified government clinics & specialist schedules</p>
+              </div>
+              <button class="btn btn-outline btn-lg" style="width: 100%; pointer-events: none;">Browse Hospitals →</button>
+            </div>
+
+            <!-- 2. Book an Appointment -->
+            <div class="vending-service-card" onclick="app.kioskSelectService('book_appointment')">
+              <div>
+                <div class="vending-card-header">
+                  <span class="vending-num-badge">2</span>
+                  <button class="btn-speaker" onclick="event.stopPropagation(); app.speakText(window.i18n.t('vending_book_appointment') + '. ' + window.i18n.t('vending_book_appointment_desc'))" aria-label="Listen to option 2">🔊</button>
+                </div>
+                <h3 class="vending-card-title" data-i18n="vending_book_appointment">2. Book an Appointment</h3>
+                <p class="vending-card-desc" data-i18n="vending_book_appointment_desc">Step-by-step outpatient appointment coordination</p>
+              </div>
+              <button class="btn btn-primary btn-lg" style="width: 100%; pointer-events: none;">Start Booking →</button>
+            </div>
+
+            <!-- 3. Arrange Transport -->
+            <div class="vending-service-card" onclick="app.kioskSelectService('arrange_transport')">
+              <div>
+                <div class="vending-card-header">
+                  <span class="vending-num-badge">3</span>
+                  <button class="btn-speaker" onclick="event.stopPropagation(); app.speakText(window.i18n.t('vending_arrange_transport') + '. ' + window.i18n.t('vending_arrange_transport_desc'))" aria-label="Listen to option 3">🔊</button>
+                </div>
+                <h3 class="vending-card-title" data-i18n="vending_arrange_transport">3. Arrange Transport</h3>
+                <p class="vending-card-desc" data-i18n="vending_arrange_transport_desc">Connect with local registered driver & upfront fare</p>
+              </div>
+              <button class="btn btn-outline btn-lg" style="width: 100%; pointer-events: none;">Arrange Ride →</button>
+            </div>
+
+            <!-- 4. Track My Care Journey -->
+            <div class="vending-service-card" onclick="app.kioskSelectService('track_journey')">
+              <div>
+                <div class="vending-card-header">
+                  <span class="vending-num-badge">4</span>
+                  <button class="btn-speaker" onclick="event.stopPropagation(); app.speakText(window.i18n.t('vending_track_journey') + '. ' + window.i18n.t('vending_track_journey_desc'))" aria-label="Listen to option 4">🔊</button>
+                </div>
+                <h3 class="vending-card-title" data-i18n="vending_track_journey">4. Track My Care Journey</h3>
+                <p class="vending-card-desc" data-i18n="vending_track_journey_desc">Live departure readiness & driver acceptance</p>
+              </div>
+              <button class="btn btn-primary btn-lg" style="width: 100%; pointer-events: none;">Check Status →</button>
+            </div>
+
+            <!-- 5. Follow-up Care -->
+            <div class="vending-service-card" onclick="app.kioskSelectService('follow_up')">
+              <div>
+                <div class="vending-card-header">
+                  <span class="vending-num-badge">5</span>
+                  <button class="btn-speaker" onclick="event.stopPropagation(); app.speakText(window.i18n.t('vending_followup') + '. ' + window.i18n.t('vending_followup_desc'))" aria-label="Listen to option 5">🔊</button>
+                </div>
+                <h3 class="vending-card-title" data-i18n="vending_followup">5. Follow-up Care</h3>
+                <p class="vending-card-desc" data-i18n="vending_followup_desc">Review prior records & schedule follow-up</p>
+              </div>
+              <button class="btn btn-outline btn-lg" style="width: 100%; pointer-events: none;">Lookup Records →</button>
+            </div>
+
+            <!-- 6. Community Health Needs -->
+            <div class="vending-service-card" onclick="app.kioskSelectService('community_needs')">
+              <div>
+                <div class="vending-card-header">
+                  <span class="vending-num-badge">6</span>
+                  <button class="btn-speaker" onclick="event.stopPropagation(); app.speakText(window.i18n.t('vending_community_needs') + '. ' + window.i18n.t('vending_community_needs_desc'))" aria-label="Listen to option 6">🔊</button>
+                </div>
+                <h3 class="vending-card-title" data-i18n="vending_community_needs">6. Community Health Needs</h3>
+                <p class="vending-card-desc" data-i18n="vending_community_needs_desc">Village demand signals & mobile medical camps</p>
+              </div>
+              <button class="btn btn-primary btn-lg" style="width: 100%; pointer-events: none;">View Community Needs →</button>
+            </div>
+          </div>
+        </div>
+
+      </div>
+    </section>
+
+    <!-- -----------------------------------------------------------------------
+         VIEW 2: TOUCH-BASED PATIENT REGISTRATION (STEP-BY-STEP WIZARD)
+         ----------------------------------------------------------------------- -->
+    <section id="view-touch-register" class="app-view">
+      <div class="card-panel">
+        <div class="flex-between mb-24">
+          <div>
+            <span id="reg-mode-badge" class="badge-tag badge-recommended">SELF_SERVICE</span>
+            <div style="display: flex; align-items: center; gap: 10px;">
+              <h2 class="page-title" id="wizard-step-title" data-i18n="step_patient_info">Patient Identification</h2>
+              <button type="button" class="btn-speaker" onclick="app.speakText(document.getElementById('wizard-step-title').innerText)" title="Read aloud" aria-label="Read aloud">🔊</button>
+            </div>
+          </div>
+          <div style="text-align: right;">
+            <span style="font-size: 14px; font-weight: 700; color: var(--primary-teal-dark);" id="wizard-step-counter">Step 1 of 4</span>
+          </div>
+        </div>
+
+        <!-- Progress bar -->
+        <div class="wizard-progress-bar">
+          <div class="progress-track"><div id="wizard-progress-fill" class="progress-fill" style="width: 25%;"></div></div>
+          <div class="step-node active" id="node-1">1</div>
+          <div class="step-node" id="node-2">2</div>
+          <div class="step-node" id="node-3">3</div>
+          <div class="step-node" id="node-4">4</div>
+        </div>
+
+        <!-- Wizard Step 1: Patient Basic Info -->
+        <div id="wizard-step-1" class="wizard-step-content">
+          <div class="form-group">
+            <label class="form-label" for="touch-patient-name" data-i18n="patient_name_label">Patient Full Name *</label>
+            <input type="text" id="touch-patient-name" class="form-input" data-i18n-placeholder="patient_name_placeholder" placeholder="e.g. Ramasamy Gounder" required>
+          </div>
+          <div style="display: grid; grid-template-columns: 1fr 2fr; gap: 16px;">
+            <div class="form-group">
+              <label class="form-label" for="touch-patient-age" data-i18n="patient_age_label">Age (Years) *</label>
+              <input type="number" id="touch-patient-age" class="form-input" data-i18n-placeholder="patient_age_placeholder" placeholder="e.g. 68" min="1" max="120" required>
+            </div>
+            <div class="form-group">
+              <label class="form-label" for="touch-patient-phone" data-i18n="patient_phone_label">Mobile / Contact Number *</label>
+              <input type="tel" id="touch-patient-phone" class="form-input" data-i18n-placeholder="patient_phone_placeholder" placeholder="10-digit mobile number" maxlength="10" required>
+            </div>
+          </div>
+          <div class="form-group">
+            <label class="form-label" for="touch-patient-village" data-i18n="patient_village_label">Village / Panchayat *</label>
+            <select id="touch-patient-village" class="form-select" required>
+              <option value="" data-i18n="select_village_placeholder">-- Select your village --</option>
+              <!-- Populated dynamically -->
+            </select>
+          </div>
+        </div>
+
+        <!-- Wizard Step 2: Healthcare Service & Facility -->
+        <div id="wizard-step-2" class="wizard-step-content hidden">
+          <div class="form-group">
+            <label class="form-label" for="touch-service-select" data-i18n="select_service_label">Which medical care is needed? *</label>
+            <select id="touch-service-select" class="form-select" onchange="app.filterFacilitiesForService()" required>
+              <option value="">-- Select Required Medical Service --</option>
+              <!-- Populated dynamically -->
+            </select>
+          </div>
+          <div class="form-group">
+            <label class="form-label" for="touch-preferred-date" data-i18n="preferred_date_label">Preferred Visit Date *</label>
+            <input type="date" id="touch-preferred-date" class="form-input" required>
+          </div>
+          <div class="form-group">
+            <label class="form-label" data-i18n="select_facility_label">Selected Healthcare Facility *</label>
+            <div id="touch-facilities-list" style="display: flex; flex-direction: column; gap: 12px; max-height: 280px; overflow-y: auto;">
+              <!-- Facilities populated dynamically with verification status tags -->
+            </div>
+          </div>
+          <!-- Alternative Facility Recommendations Container for Wizard -->
+          <div id="wizard-alt-recommendations" class="hidden"></div>
+        </div>
+
+        <!-- Wizard Step 3: Transportation Assistance -->
+        <div id="wizard-step-3" class="wizard-step-content hidden">
+          <label class="form-label" data-i18n="transport_question">Do you require local transport assistance (auto/vehicle) to reach the hospital?</label>
+          <div class="form-radio-card" onclick="app.setTransportChoice(true)">
+            <input type="radio" id="touch-trans-yes" name="transport-choice" value="true">
+            <div>
+              <strong data-i18n="transport_yes">Yes, I need transport assistance</strong>
+              <div style="font-size: 13px; color: var(--text-muted);">A registered local driver will be requested. Upfront fare must be confirmed.</div>
+            </div>
+          </div>
+          <div class="form-radio-card" onclick="app.setTransportChoice(false)">
+            <input type="radio" id="touch-trans-no" name="transport-choice" value="false" checked>
+            <div>
+              <strong data-i18n="transport_no">No, I will arrange my own transport</strong>
+              <div style="font-size: 13px; color: var(--text-muted);">You will travel independently directly to the confirmed hospital.</div>
+            </div>
+          </div>
+
+          <div id="touch-landmark-group" class="form-group mt-16 hidden">
+            <label class="form-label" for="touch-pickup-landmark" data-i18n="pickup_landmark_label">Pickup Location / Landmark</label>
+            <input type="text" id="touch-pickup-landmark" class="form-input" data-i18n-placeholder="pickup_landmark_placeholder" placeholder="e.g. Bus stop shelter / Panchayat office">
+          </div>
+        </div>
+
+        <!-- Wizard Step 4: Review & Confirmation -->
+        <div id="wizard-step-4" class="wizard-step-content hidden">
+          <h3 class="page-title" style="font-size: 20px;" data-i18n="step_review_title">Review & Confirm Care Journey</h3>
+          <p class="page-subtitle" data-i18n="review_desc">Please review your registration details before final submission.</p>
+
+          <div style="background: var(--bg-subtle); border-radius: var(--radius-md); padding: 20px; margin-bottom: 20px;">
+            <div style="display: grid; grid-template-columns: repeat(2, 1fr); gap: 14px; font-size: 15px;">
+              <div><strong>Patient Name:</strong> <span id="rev-patient-name">-</span></div>
+              <div><strong>Age / Phone:</strong> <span id="rev-patient-age-phone">-</span></div>
+              <div><strong>Village:</strong> <span id="rev-village">-</span></div>
+              <div><strong>Service:</strong> <span id="rev-service">-</span></div>
+              <div><strong>Visit Date:</strong> <span id="rev-date">-</span></div>
+              <div><strong>Facility:</strong> <span id="rev-facility">-</span></div>
+              <div><strong>Transport Needed:</strong> <span id="rev-transport">-</span></div>
+              <div><strong>Pickup Landmark:</strong> <span id="rev-landmark">-</span></div>
+            </div>
+          </div>
+
+          <div class="emergency-ribbon" style="border-radius: var(--radius-md); margin-bottom: 20px;">
+            <span data-i18n="disclaimer_notice">
+              Notice: RuralCare verifies appointment schedule and transport readiness. It does not guarantee doctor attendance, treatment, waiting time or medical fitness to travel.
+            </span>
+          </div>
+        </div>
+
+        <!-- Wizard Navigation Footer -->
+        <div class="wizard-footer" style="display: flex; justify-content: space-between; align-items: center; gap: 12px; flex-wrap: wrap;">
+          <div style="display: flex; gap: 12px;">
+            <button type="button" class="btn btn-secondary" id="btn-wizard-back" onclick="app.wizardPrevStep()" data-i18n="btn_back">Back</button>
+            <button type="button" class="btn btn-outline" id="btn-wizard-startover" onclick="app.kioskStartOver()" data-i18n="btn_start_over">Start Over</button>
+          </div>
+          <button type="button" class="btn btn-primary btn-lg" id="btn-wizard-next" onclick="app.wizardNextStep()" data-i18n="btn_continue">Continue</button>
+        </div>
+      </div>
+    </section>
+
+    <!-- -----------------------------------------------------------------------
+         VIEW 3: VOICE-FIRST SELF-SERVICE MODE (MULTI-INTENT CONVERSATIONAL)
+         ----------------------------------------------------------------------- -->
+    <section id="view-voice-register" class="app-view">
+      <div class="card-panel">
+        <div class="flex-between mb-16 flex-wrap" style="gap: 12px;">
+          <div>
+            <span class="badge-tag badge-primary-mode" data-i18n="entry_mode_voice_badge">⭐ PRIMARY MODE</span>
+            <h2 class="page-title" data-i18n="entry_mode_voice_title">Voice-First Self-Service</h2>
+            <p class="page-subtitle" style="margin-bottom: 0;">
+              Spoken healthcare navigation: Hospital discovery, appointments, transport & journey tracking.
+            </p>
+          </div>
+          <div style="display: flex; gap: 8px; flex-wrap: wrap;">
+            <button class="btn btn-outline" onclick="app.showView('method-select')" style="padding: 6px 14px; font-size: 13px;">
+              ← Back to Modes
+            </button>
+            <button class="btn btn-secondary" onclick="app.startAssistedRegistration()" style="padding: 6px 14px; font-size: 13px;">
+              Switch to Assisted Kiosk
+            </button>
+          </div>
+        </div>
+
+        <!-- Voice Navigation Bar (4 Key Capabilities) -->
+        <div class="voice-flow-bar mb-16">
+          <span style="font-weight: 700; font-size: 13px; color: var(--text-dark);">Voice Task:</span>
+          <button type="button" class="voice-flow-pill active" id="btn-flow-menu" onclick="voiceAssistant.setVoiceFlow('menu')">
+            🎙️ All Voice Tasks (முதன்மை)
+          </button>
+          <button type="button" class="voice-flow-pill" id="btn-flow-discovery" onclick="voiceAssistant.setVoiceFlow('discovery')">
+            🏥 1. Hospital Discovery (மருத்துவமனை தேட)
+          </button>
+          <button type="button" class="voice-flow-pill" id="btn-flow-booking" onclick="voiceAssistant.setVoiceFlow('booking')">
+            📅 2. Book Journey (பதிவு செய்ய)
+          </button>
+          <button type="button" class="voice-flow-pill" id="btn-flow-transport" onclick="voiceAssistant.setVoiceFlow('transport')">
+            🛺 3. Transport (வாகன உதவி)
+          </button>
+          <button type="button" class="voice-flow-pill" id="btn-flow-tracking" onclick="voiceAssistant.setVoiceFlow('tracking')">
+            📍 4. Track Journey (பயண நிலை)
+          </button>
+        </div>
+
+        <!-- Language Mode Selector -->
+        <div class="voice-mode-bar mb-16">
+          <span style="font-weight: 700; font-size: 13px; margin-right: 8px;">குரல் மொழி / Language Mode:</span>
+          <button type="button" class="voice-mode-pill active" id="btn-voice-mode-ta" onclick="voiceAssistant.setLanguageMode('ta')">
+            தமிழ் (ta-IN)
+          </button>
+          <button type="button" class="voice-mode-pill" id="btn-voice-mode-en" onclick="voiceAssistant.setLanguageMode('en')">
+            English (en-IN)
+          </button>
+          <button type="button" class="voice-mode-pill" id="btn-voice-mode-mixed" onclick="voiceAssistant.setLanguageMode('mixed')">
+            தமிழ் + English (Mixed)
+          </button>
+        </div>
+
+        <div id="voice-fallback-alert" class="emergency-ribbon hidden" style="border-radius: var(--radius-md); margin-bottom: 16px;"></div>
+
+        <!-- Hero Voice Card -->
+        <div class="voice-hero-box">
+          <div style="font-size: 14px; font-weight: 700; color: var(--primary-teal-dark); margin-bottom: 8px;">
+            <span id="voice-task-label">Voice Assistant</span> • <span id="voice-step-badge">Ready</span>
+          </div>
+          <h3 id="voice-prompt-text" style="font-size: 24px; font-weight: 700; color: var(--text-dark); margin-bottom: 10px;">
+            வணக்கம்! உங்களுக்கு என்ன உதவி வேண்டும்?
+          </h3>
+          <p id="voice-prompt-subtext" style="font-size: 16px; color: var(--text-muted); margin-bottom: 16px;">
+            'மருத்துவமனை தேட', 'புதிய பதிவு செய்ய', அல்லது 'பயண நிலையை அறிய' என்று கூறவும்.
+          </p>
+
+          <p class="voice-press-instruction" data-i18n="voice_press_speak" style="font-weight: 600; font-size: 15px; color: var(--primary-teal-dark); margin-bottom: 12px;">
+            Press the microphone and speak.
+          </p>
+
+          <button id="voice-mic-icon" class="mic-btn" onclick="app.toggleVoiceMic()" aria-label="Microphone">
+            <svg width="44" height="44" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M12 1a3 3 0 0 0-3 3v8a3 3 0 0 0 6 0V4a3 3 0 0 0-3-3z"/><path d="M19 10v2a7 7 0 0 1-14 0v-2"/><line x1="12" y1="19" x2="12" y2="23"/><line x1="8" y1="23" x2="16" y2="23"/></svg>
+          </button>
+
+          <!-- 7-State Micro-status badge -->
+          <div style="margin-top: 12px;">
+            <div id="voice-status-pill" class="voice-indicator idle">READY</div>
+          </div>
+
+          <!-- Real-time Interim Transcription Box -->
+          <div id="voice-interim-box" class="voice-interim-container" aria-live="polite">
+            <span class="interim-idle-hint" data-i18n="voice_interim_placeholder">Live interim transcription will appear here as you speak...</span>
+          </div>
+
+          <!-- ===================================================================
+               EDITABLE RECOGNITION REVIEW & ZERO AUTO-SUBMISSION CONTAINER
+               =================================================================== -->
+          <div id="voice-transcription-edit-container" class="mt-12 hidden" style="background: #FFFFFF; border: 2px solid #0D9488; border-radius: var(--radius-md); padding: 14px; text-align: left; box-shadow: 0 4px 12px rgba(13, 148, 136, 0.12);">
+            <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 8px; flex-wrap: wrap; gap: 6px;">
+              <span style="font-size: 13px; font-weight: 800; color: #0F766E;">
+                ✍️ பெறப்பட்ட குரல் உரை (சரிபார்த்து திருத்தலாம் / Editable Transcription):
+              </span>
+              <span id="stt-engine-badge" class="badge-tag" style="background: #E0F2FE; color: #0369A1; font-size: 11px; font-weight: 700;">Neural STT (ta-IN)</span>
+            </div>
+            <input type="text" id="voice-transcription-input" class="form-input" style="font-size: 16px; font-weight: 600; color: #0F172A; margin-bottom: 10px; border: 1.5px solid #0D9488;" placeholder="குரல் உரை இங்கே தோன்றும்...">
+            <div style="display: flex; gap: 8px; flex-wrap: wrap; justify-content: flex-end;">
+              <button type="button" class="btn btn-outline btn-sm" onclick="voiceAssistant.retryQuestion()">
+                🔄 மீண்டும் பேசு (Retry)
+              </button>
+              <button type="button" class="btn btn-secondary btn-sm" onclick="voiceAssistant.cancelCurrentPrompt()">
+                ❌ ரத்து (Cancel)
+              </button>
+              <button type="button" class="btn btn-success btn-sm" onclick="voiceAssistant.confirmCurrentTranscription()">
+                ✅ உறுதிப்படுத்து (Confirm & Next)
+              </button>
+            </div>
+          </div>
+
+          <!-- ===================================================================
+               MANUAL TAMIL TEXT ENTRY FALLBACK & QUICK CHIPS
+               =================================================================== -->
+          <div id="voice-manual-fallback-card" class="mt-12 p-12" style="background: #F8FAFC; border: 1.5px dashed #CBD5E1; border-radius: var(--radius-md); text-align: left;">
+            <div style="font-size: 12px; font-weight: 700; color: #475569; margin-bottom: 6px;">
+              ⌨️ தட்டச்சு அல்லது விரைவுத் தேர்வு (Manual Tamil Entry Fallback):
+            </div>
+            <div style="display: flex; gap: 6px; flex-wrap: wrap; margin-bottom: 8px;">
+              <button type="button" class="badge-tag" style="cursor: pointer; background: #E2E8F0; color: #1E293B;" onclick="voiceAssistant.insertQuickText('காய்ச்சல்')">காய்ச்சல்</button>
+              <button type="button" class="badge-tag" style="cursor: pointer; background: #E2E8F0; color: #1E293B;" onclick="voiceAssistant.insertQuickText('தலைவலி')">தலைவலி</button>
+              <button type="button" class="badge-tag" style="cursor: pointer; background: #E2E8F0; color: #1E293B;" onclick="voiceAssistant.insertQuickText('கண் சிகிச்சை')">கண் சிகிச்சை</button>
+              <button type="button" class="badge-tag" style="cursor: pointer; background: #E2E8F0; color: #1E293B;" onclick="voiceAssistant.insertQuickText('பொது மருத்துவம்')">பொது மருத்துவம்</button>
+              <button type="button" class="badge-tag" style="cursor: pointer; background: #E2E8F0; color: #1E293B;" onclick="voiceAssistant.insertQuickText('ஆம்')">ஆம் (Yes)</button>
+              <button type="button" class="badge-tag" style="cursor: pointer; background: #E2E8F0; color: #1E293B;" onclick="voiceAssistant.insertQuickText('இல்லை')">இல்லை (No)</button>
+              <button type="button" class="badge-tag" style="cursor: pointer; background: #E2E8F0; color: #1E293B;" onclick="voiceAssistant.insertQuickText('செட்டிபாளையம்')">செட்டிபாளையம்</button>
+              <button type="button" class="badge-tag" style="cursor: pointer; background: #E2E8F0; color: #1E293B;" onclick="voiceAssistant.insertQuickText('பொள்ளாச்சி')">பொள்ளாச்சி</button>
+            </div>
+            <div style="display: flex; gap: 8px;">
+              <input type="text" id="manual-tamil-text-input" class="form-input" style="flex: 1; font-size: 14px;" placeholder="தமிழில் தட்டச்சு செய்யவும் (Type in Tamil)...">
+              <button type="button" class="btn btn-primary btn-sm" onclick="voiceAssistant.submitManualText()">
+                உள்ளிடு (Submit)
+              </button>
+            </div>
+          </div>
+
+          <!-- Action Controls Row: Speak, Stop, Retry, Repeat -->
+          <div class="voice-actions-row" style="margin-top: 16px; display: flex; justify-content: center; gap: 10px; flex-wrap: wrap;">
+            <button type="button" class="btn btn-primary" onclick="voiceAssistant.listen()">
+              <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polygon points="5 3 19 12 5 21 5 3"/></svg>
+              <span data-i18n="voice_start_btn">Speak Now</span>
+            </button>
+            <button type="button" class="btn btn-secondary" onclick="voiceAssistant.stopListening()">
+              <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><rect x="6" y="6" width="12" height="12"/></svg>
+              <span data-i18n="voice_stop_btn">Stop</span>
+            </button>
+            <button type="button" class="btn btn-secondary" onclick="voiceAssistant.retryQuestion()">
+              <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21.5 2v6h-6M21.34 15.57a10 10 0 1 1-.57-8.38l5.67-5.67"/></svg>
+              <span data-i18n="voice_retry_btn">Retry</span>
+            </button>
+            <button type="button" class="btn btn-outline" onclick="voiceAssistant.repeatQuestion()">
+              <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polygon points="11 5 6 9 2 9 2 15 6 15 11 19 11 5"/><path d="M19.07 4.93a10 10 0 0 1 0 14.14M15.54 8.46a5 5 0 0 1 0 7.07"/></svg>
+              <span data-i18n="voice_repeat_btn">Repeat Spoken Question</span>
+            </button>
+          </div>
+
+          <!-- Quick Interactive QA / Spoken Demo Triggers -->
+          <div id="voice-test-triggers" class="mt-16" style="display: flex; gap: 8px; justify-content: center; flex-wrap: wrap;">
+            <button id="btn-test-discovery" type="button" class="btn btn-outline" style="font-size: 13px; padding: 4px 12px;" onclick="voiceAssistant.executeSpokenDiscovery('SRV-EYE')">
+              🏥 Test Eye Care Discovery
+            </button>
+            <button id="btn-test-populate" type="button" class="btn btn-outline" style="font-size: 13px; padding: 4px 12px;" onclick="document.getElementById('voice-review-patient_name').value='முத்துசாமி கவுண்டர்'; document.getElementById('voice-review-age').value='68'; document.getElementById('voice-review-contact_number').value='9842100001'; document.getElementById('voice-review-village').value='செட்டிபாளையம்'; document.getElementById('voice-review-service_query').value='கண் சிகிச்சை (Eye Care)'; document.getElementById('voice-review-transport_required').checked=true; voiceAssistant.finishVoiceWorkflow();">
+              📢 Test Read-Back Verification
+            </button>
+            <button id="btn-test-track" type="button" class="btn btn-outline" style="font-size: 13px; padding: 4px 12px;" onclick="voiceAssistant.setVoiceFlow('tracking'); voiceAssistant.submitVoiceTrackSearch('9842100001');">
+              📍 Test Voice Track Search
+            </button>
+          </div>
+
+          <!-- ===================================================================
+               TAMIL TTS VERIFICATION BENCH (5 OFFICIAL SENTENCES - AZURE NEURAL)
+               =================================================================== -->
+          <div id="tamil-tts-test-bench" class="mt-20 p-16" style="background: #F8FAFC; border: 2px solid #0D9488; border-radius: var(--radius-md); box-shadow: 0 2px 8px rgba(13, 148, 136, 0.08); text-align: left;">
+            <div style="display: flex; justify-content: space-between; align-items: center; border-bottom: 1px solid #E2E8F0; padding-bottom: 10px; margin-bottom: 12px; flex-wrap: wrap; gap: 8px;">
+              <div>
+                <h4 style="font-size: 16px; font-weight: 800; color: #0F172A; margin: 0;">🔊 Tamil Text-to-Speech (TTS) Verification Bench</h4>
+                <p style="font-size: 12px; color: var(--text-muted); margin: 2px 0 0 0;">Powered by Microsoft Azure Neural Speech (ta-IN-PallaviNeural & ta-IN-ValluvarNeural)</p>
+              </div>
+              <div style="display: flex; align-items: center; gap: 8px; flex-wrap: wrap;">
+                <label for="azure-voice-select" style="font-size: 12px; font-weight: 700; color: #0F766E;">Azure Voice:</label>
+                <select id="azure-voice-select" onchange="voiceAssistant.setAzureVoice(this.value)" style="font-size: 12px; font-weight: 700; padding: 4px 8px; border-radius: 6px; border: 1px solid #0D9488; background: #CCFBF1; color: #0F766E;">
+                  <option value="ta-IN-PallaviNeural" selected>ta-IN-PallaviNeural (Female - Primary)</option>
+                  <option value="ta-IN-ValluvarNeural">ta-IN-ValluvarNeural (Male - Alternative)</option>
+                </select>
+                <div style="font-size: 12px; background: #E0F2FE; color: #0369A1; padding: 4px 10px; border-radius: 6px; font-weight: 700;">
+                  Active Voice: <strong id="debug-tts-voice-name">ta-IN-PallaviNeural (Azure Neural)</strong> [<span id="debug-tts-lang">ta-IN</span>]
+                </div>
+              </div>
+            </div>
+
+            <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(230px, 1fr)); gap: 10px; margin-bottom: 12px;">
+              <button id="btn-tamil-test-a" type="button" class="btn btn-outline" onclick="voiceAssistant.testMandatoryTTS(1)" style="text-align: left; padding: 10px 14px; font-size: 13px; line-height: 1.4; border-color: #0D9488;">
+                <span style="font-size: 11px; font-weight: 800; color: #0D9488; display: block; text-transform: uppercase;">⭐ Mandatory TTS 1 (Greeting & Name)</span>
+                வணக்கம்! உங்கள் பெயரைச் சொல்லுங்கள்.
+              </button>
+              <button id="btn-tamil-test-b" type="button" class="btn btn-outline" onclick="voiceAssistant.testMandatoryTTS(2)" style="text-align: left; padding: 10px 14px; font-size: 13px; line-height: 1.4; border-color: #0D9488;">
+                <span style="font-size: 11px; font-weight: 800; color: #0D9488; display: block; text-transform: uppercase;">⭐ Mandatory TTS 2 (Health Issue)</span>
+                உங்களுக்கு எந்த உடல்நலப் பிரச்சினை உள்ளது?
+              </button>
+              <button id="btn-tamil-test-c" type="button" class="btn btn-outline" onclick="voiceAssistant.testMandatoryTTS(3)" style="text-align: left; padding: 10px 14px; font-size: 13px; line-height: 1.4; border-color: #0D9488;">
+                <span style="font-size: 11px; font-weight: 800; color: #0D9488; display: block; text-transform: uppercase;">⭐ Mandatory TTS 3 (Hospital Choice)</span>
+                நீங்கள் எந்த மருத்துவமனைக்குச் செல்ல விரும்புகிறீர்கள்?
+              </button>
+              <button id="btn-tamil-test-1" type="button" class="btn btn-outline" onclick="voiceAssistant.testTamilSentence(1)" style="text-align: left; padding: 10px 14px; font-size: 13px; line-height: 1.4;">
+                <span style="font-size: 11px; font-weight: 800; color: #0D9488; display: block; text-transform: uppercase;">Tamil Test 1 (Welcome)</span>
+                வணக்கம்! ரூரல்கேர் மருத்துவ சேவைக்கு உங்களை வரவேற்கிறோம்.
+              </button>
+              <button id="btn-tamil-test-2" type="button" class="btn btn-outline" onclick="voiceAssistant.testTamilSentence(2)" style="text-align: left; padding: 10px 14px; font-size: 13px; line-height: 1.4;">
+                <span style="font-size: 11px; font-weight: 800; color: #0D9488; display: block; text-transform: uppercase;">Tamil Test 2 (Name Input)</span>
+                உங்கள் பெயரைச் சொல்லுங்கள்.
+              </button>
+              <button id="btn-tamil-test-3" type="button" class="btn btn-outline" onclick="voiceAssistant.testTamilSentence(3)" style="text-align: left; padding: 10px 14px; font-size: 13px; line-height: 1.4;">
+                <span style="font-size: 11px; font-weight: 800; color: #0D9488; display: block; text-transform: uppercase;">Tamil Test 3 (Service Query)</span>
+                உங்களுக்கு எந்த மருத்துவ உதவி தேவை?
+              </button>
+              <button id="btn-tamil-test-4" type="button" class="btn btn-outline" onclick="voiceAssistant.testTamilSentence(4)" style="text-align: left; padding: 10px 14px; font-size: 13px; line-height: 1.4;">
+                <span style="font-size: 11px; font-weight: 800; color: #0D9488; display: block; text-transform: uppercase;">Tamil Test 4 (Discovery)</span>
+                அருகிலுள்ள மருத்துவமனைகளைத் தேடுகிறோம். தயவுசெய்து காத்திருக்கவும்.
+              </button>
+              <button id="btn-tamil-test-5" type="button" class="btn btn-outline" onclick="voiceAssistant.testTamilSentence(5)" style="text-align: left; padding: 10px 14px; font-size: 13px; line-height: 1.4;">
+                <span style="font-size: 11px; font-weight: 800; color: #0D9488; display: block; text-transform: uppercase;">Tamil Test 5 (Confirmation)</span>
+                உங்கள் பயண விவரங்களை உறுதிப்படுத்துங்கள்.
+              </button>
+            </div>
+
+            <div style="background: #FFFFFF; border: 1px solid #E2E8F0; border-radius: 6px; padding: 10px 14px; font-size: 12px; display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 8px;">
+              <div>
+                <span style="color: #64748B;">Spoken Payload:</span>
+                <strong id="tts-cleaned-text-preview" style="color: #0F172A; margin-left: 6px;">(Ready for test trigger)</strong>
+              </div>
+              <div style="display: flex; gap: 6px;">
+                <button class="btn btn-secondary" onclick="voiceAssistant.pauseSpeech()" style="padding: 3px 10px; font-size: 11px;">⏸️ Pause</button>
+                <button class="btn btn-secondary" onclick="voiceAssistant.resumeSpeech()" style="padding: 3px 10px; font-size: 11px;">▶️ Resume</button>
+                <button class="btn btn-secondary" onclick="voiceAssistant.stopSpeech()" style="padding: 3px 10px; font-size: 11px;">⏹️ Stop</button>
+                <button class="btn btn-outline" onclick="voiceAssistant.repeatSpeech()" style="padding: 3px 10px; font-size: 11px;">🔄 Repeat</button>
+              </div>
+            </div>
+          </div>
+
+          <!-- ===================================================================
+               TAMIL STT VERIFICATION BENCH (5 MANDATORY BENCHMARK SENTENCES)
+               =================================================================== -->
+          <div id="tamil-stt-test-bench" class="mt-20 p-16" style="background: #F0FDF4; border: 2px solid #059669; border-radius: var(--radius-md); box-shadow: 0 2px 8px rgba(5, 150, 105, 0.08); text-align: left;">
+            <div style="display: flex; justify-content: space-between; align-items: center; border-bottom: 1px solid #D1FAE5; padding-bottom: 10px; margin-bottom: 12px; flex-wrap: wrap; gap: 8px;">
+              <div>
+                <h4 style="font-size: 16px; font-weight: 800; color: #065F46; margin: 0;">🎙️ Tamil Speech-to-Text (STT) Verification Bench</h4>
+                <p style="font-size: 12px; color: var(--text-muted); margin: 2px 0 0 0;">Neural Speech Recognition with Tamil (ta-IN) & Domain Medical Vocabulary</p>
+              </div>
+              <div style="font-size: 12px; background: #DCFCE7; color: #166534; padding: 4px 10px; border-radius: 6px; font-weight: 700;">
+                STT Engine: <strong>Azure AI / Google Neural STT</strong> [ta-IN]
+              </div>
+            </div>
+
+            <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(230px, 1fr)); gap: 10px; margin-bottom: 12px;">
+              <button id="btn-stt-test-1" type="button" class="btn btn-outline" onclick="voiceAssistant.testTamilSTTSentence(1)" style="text-align: left; padding: 10px 14px; font-size: 13px; line-height: 1.4; border-color: #059669;">
+                <span style="font-size: 11px; font-weight: 800; color: #059669; display: block; text-transform: uppercase;">STT Benchmark 1 (Headache)</span>
+                1. எனக்கு தலைவலி இருக்கிறது.
+              </button>
+              <button id="btn-stt-test-2" type="button" class="btn btn-outline" onclick="voiceAssistant.testTamilSTTSentence(2)" style="text-align: left; padding: 10px 14px; font-size: 13px; line-height: 1.4; border-color: #059669;">
+                <span style="font-size: 11px; font-weight: 800; color: #059669; display: block; text-transform: uppercase;">STT Benchmark 2 (Fever)</span>
+                2. எனக்கு காய்ச்சல் உள்ளது.
+              </button>
+              <button id="btn-stt-test-3" type="button" class="btn btn-outline" onclick="voiceAssistant.testTamilSTTSentence(3)" style="text-align: left; padding: 10px 14px; font-size: 13px; line-height: 1.4; border-color: #059669;">
+                <span style="font-size: 11px; font-weight: 800; color: #059669; display: block; text-transform: uppercase;">STT Benchmark 3 (Nearby Hospital)</span>
+                3. எனக்கு அருகில் மருத்துவமனை வேண்டும்.
+              </button>
+              <button id="btn-stt-test-4" type="button" class="btn btn-outline" onclick="voiceAssistant.testTamilSTTSentence(4)" style="text-align: left; padding: 10px 14px; font-size: 13px; line-height: 1.4; border-color: #059669;">
+                <span style="font-size: 11px; font-weight: 800; color: #059669; display: block; text-transform: uppercase;">STT Benchmark 4 (Transport)</span>
+                4. எனக்கு போக்குவரத்து வசதி தேவை.
+              </button>
+              <button id="btn-stt-test-5" type="button" class="btn btn-outline" onclick="voiceAssistant.testTamilSTTSentence(5)" style="text-align: left; padding: 10px 14px; font-size: 13px; line-height: 1.4; border-color: #059669;">
+                <span style="font-size: 11px; font-weight: 800; color: #059669; display: block; text-transform: uppercase;">STT Benchmark 5 (Location)</span>
+                5. நான் பொள்ளாச்சியில் வசிக்கிறேன்.
+              </button>
+              <button id="btn-stt-test-6" type="button" class="btn btn-outline" onclick="voiceAssistant.testTamilSTTSentence(6)" style="text-align: left; padding: 10px 14px; font-size: 13px; line-height: 1.4; border-color: #059669;">
+                <span style="font-size: 11px; font-weight: 800; color: #059669; display: block; text-transform: uppercase;">STT Benchmark 6 (Conversational)</span>
+                வணக்கம், எனக்கு உடம்பு சரியில்லை, டாக்டர் பார்க்க வேண்டும்.
+              </button>
+              <button id="btn-stt-test-7" type="button" class="btn btn-outline" onclick="voiceAssistant.testTamilSTTSentence(7)" style="text-align: left; padding: 10px 14px; font-size: 13px; line-height: 1.4; border-color: #059669;">
+                <span style="font-size: 11px; font-weight: 800; color: #059669; display: block; text-transform: uppercase;">STT Benchmark 7 (Mixed Language)</span>
+                எனக்கு eye checkup மற்றும் hospital appointment வேண்டும்.
+              </button>
+            </div>
+
+            <div style="background: #FFFFFF; border: 1px solid #A7F3D0; border-radius: 6px; padding: 10px 14px; font-size: 12px; display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 8px;">
+              <div>
+                <span style="color: #047857; font-weight: 700;">STT Live Result:</span>
+                <strong id="stt-test-result-preview" style="color: #064E3B; margin-left: 6px;">(Click any STT benchmark button above or speak into mic)</strong>
+              </div>
+              <span id="stt-test-confidence-badge" class="badge-tag" style="background: #ECFDF5; color: #065F46; font-size: 11px; font-weight: 700;">100% Verified</span>
+            </div>
+          </div>
+          </div>
+        </div>
+
+        <!-- ===================================================================
+             PANEL A: SPOKEN HOSPITAL DISCOVERY RESULTS
+             =================================================================== -->
+        <div id="voice-discovery-panel" class="hidden mb-24" style="background: #F0FDF4; border: 2px solid var(--healthcare-green); border-radius: var(--radius-md); padding: 20px;">
+          <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 12px; flex-wrap: wrap; gap: 8px;">
+            <h3 style="font-size: 18px; font-weight: 700; color: var(--healthcare-green-dark); margin-bottom: 0;">
+              🏥 Hospital Recommendations Found (மருத்துவமனை பரிந்துரைகள்)
+            </h3>
+            <span class="badge-tag badge-recommended">Verified Availability</span>
+          </div>
+          <p id="voice-discovery-summary" style="font-size: 14px; color: var(--text-dark); margin-bottom: 16px;">
+            Loading recommended facilities...
+          </p>
+          <div id="voice-discovery-cards" style="display: flex; flex-direction: column; gap: 12px;"></div>
+        </div>
+
+        <!-- ===================================================================
+             PANEL B: SPOKEN CARE JOURNEY TRACKING RESULTS
+             =================================================================== -->
+        <div id="voice-tracking-panel" class="hidden mb-24" style="background: #F8FAFC; border: 2px solid #3B82F6; border-radius: var(--radius-md); padding: 20px;">
+          <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 12px; flex-wrap: wrap; gap: 8px;">
+            <h3 style="font-size: 18px; font-weight: 700; color: #1E40AF; margin-bottom: 0;">
+              📍 Care Journey Departure Readiness Status
+            </h3>
+            <span id="voice-track-status-badge" class="status-pill status-pending">Checking...</span>
+          </div>
+          
+          <div style="display: flex; gap: 10px; margin-bottom: 16px; flex-wrap: wrap;">
+            <input type="text" id="voice-track-id-input" class="form-input" style="flex: 1; min-width: 200px;" placeholder="Spoken Care Journey ID or Phone...">
+            <button class="btn btn-primary" onclick="voiceAssistant.submitVoiceTrackSearch()">Search & Speak Status</button>
+          </div>
+
+          <div id="voice-tracking-result-box" style="background: #FFFFFF; border: 1px solid var(--border-light); border-radius: var(--radius-md); padding: 16px;">
+            <p id="voice-track-explanation" style="font-size: 15px; font-weight: 600; color: var(--text-dark); margin-bottom: 8px;">
+              Departure unverified.
+            </p>
+            <div id="voice-track-details" style="font-size: 13px; color: var(--text-muted);"></div>
+          </div>
+        </div>
+
+        <!-- ===================================================================
+             PANEL C: APPOINTMENT BOOKING & DETAILS REVIEW (EDITABLE)
+             =================================================================== -->
+        <div id="voice-booking-panel" style="background: var(--bg-card); border: 1px solid var(--border-light); border-radius: var(--radius-md); padding: 20px;">
+          
+          <!-- Spoken Read-Back Confirmation Banner -->
+          <div id="voice-readback-banner" class="voice-check-banner mb-16 hidden" style="background: #FEF3C7; border: 1.5px solid #D97706; border-radius: var(--radius-sm); padding: 14px 18px;">
+            <div style="display: flex; align-items: center; gap: 10px; margin-bottom: 6px;">
+              <span style="font-size: 22px;">📢</span>
+              <strong style="color: #92400E; font-size: 16px;">Read-Back Verification / விவரங்கள் சரிபார்ப்பு:</strong>
+            </div>
+            <p id="voice-readback-text" style="font-size: 15px; color: #78350F; margin-bottom: 10px; font-weight: 600;">
+              Please check the captured details below.
+            </p>
+            <div style="font-size: 13px; color: #78350F;">
+              Say <strong>"ஆம்"</strong> / <strong>"Yes"</strong> or click <strong>"Confirm Details & Register"</strong> below to proceed.
+            </div>
+          </div>
+
+          <!-- Explicit Instruction Banner -->
+          <div class="voice-check-banner mb-16" style="background: #EFF6FF; border: 1.5px solid #3B82F6; border-radius: var(--radius-sm); padding: 12px 16px; display: flex; align-items: center; gap: 10px;">
+            <span style="font-size: 20px;">🔍</span>
+            <div style="font-weight: 700; color: #1E40AF; font-size: 15px;" data-i18n="voice_check_words">
+              Please check the recognised words before continuing.
+            </div>
+          </div>
+
+          <h4 style="font-size: 16px; font-weight: 700; margin-bottom: 6px;" data-i18n="step_review_title">Recognized Details (Editable)</h4>
+          <p style="font-size: 13px; color: var(--text-muted); margin-bottom: 16px;" data-i18n="voice_correction_hint">
+            You can touch any field below to edit or correct recognized text at any time.
+          </p>
+
+          <div style="display: grid; grid-template-columns: repeat(2, 1fr); gap: 14px;">
+            <div class="form-group">
+              <label class="form-label" style="font-size: 13px;" data-i18n="patient_name_label">Patient Name</label>
+              <input type="text" id="voice-review-patient_name" class="form-input">
+            </div>
+            <div class="form-group">
+              <label class="form-label" style="font-size: 13px;" data-i18n="patient_age_label">Age</label>
+              <input type="number" id="voice-review-age" class="form-input">
+            </div>
+            <div class="form-group">
+              <label class="form-label" style="font-size: 13px;" data-i18n="patient_phone_label">Contact Number</label>
+              <input type="tel" id="voice-review-contact_number" class="form-input">
+            </div>
+            <div class="form-group">
+              <label class="form-label" style="font-size: 13px;" data-i18n="patient_village_label">Village</label>
+              <input type="text" id="voice-review-village" class="form-input">
+            </div>
+            <div class="form-group">
+              <label class="form-label" style="font-size: 13px;" data-i18n="select_service_label">Service Query</label>
+              <input type="text" id="voice-review-service_query" class="form-input" placeholder="General Medicine / Dialysis / Eye Care">
+            </div>
+            <div class="form-group">
+              <label class="form-label" style="font-size: 13px;" data-i18n="step_transport_info">Transport Needed?</label>
+              <div style="display: flex; align-items: center; gap: 8px; margin-top: 10px;">
+                <input type="checkbox" id="voice-review-transport_required" style="width: 22px; height: 22px;">
+                <label for="voice-review-transport_required" style="font-weight: 600;">Yes, transport assistance needed</label>
+              </div>
+            </div>
+          </div>
+
+          <div id="voice-final-review" class="mt-24 text-center">
+            <button class="btn btn-success btn-lg" onclick="app.submitVoiceRegistration()">
+              <span data-i18n="voice_finish_btn">Confirm Details & Register</span>
+            </button>
+          </div>
+        </div>
+
+      </div>
+    </section>
+
+    <!-- -----------------------------------------------------------------------
+         VIEW 4: HEALTHCARE FACILITY DIRECTORY
+         ----------------------------------------------------------------------- -->
+    <section id="view-directory" class="app-view">
+      <div class="card-panel">
+        <div class="flex-between mb-16 flex-wrap">
+          <div>
+            <span class="badge-tag badge-recommended" data-i18n="demo_badge">SYNTHETIC DEMO DIRECTORY</span>
+            <h2 class="page-title" data-i18n="directory_title">Healthcare Facility Directory</h2>
+            <p class="page-subtitle" data-i18n="directory_subtitle">
+              Government Taluk Hospitals, Community Health Centres & Wellness Sub-Centres
+            </p>
+          </div>
+          <div>
+            <button class="btn btn-primary" onclick="app.showView('method-select')">
+              + <span data-i18n="btn_confirm_submit">Book Care Journey</span>
+            </button>
+          </div>
+        </div>
+
+        <!-- Filter bar -->
+        <div style="display: flex; gap: 12px; margin-bottom: 24px; flex-wrap: wrap;">
+          <select id="directory-service-filter" class="form-select" style="max-width: 260px;" onchange="app.loadDirectory()">
+            <option value="" data-i18n="filter_service_all">All Medical Services</option>
+          </select>
+          <select id="directory-district-filter" class="form-select" style="max-width: 200px;" onchange="app.loadDirectory()">
+            <option value="" data-i18n="filter_district_all">All Districts</option>
+            <option value="Coimbatore">Coimbatore</option>
+            <option value="Salem">Salem</option>
+            <option value="Madurai">Madurai</option>
+          </select>
+        </div>
+
+        <!-- Directory cards grid -->
+        <div id="directory-grid-container" class="directory-grid">
+          <!-- Populated dynamically -->
+        </div>
+      </div>
+    </section>
+
+    <!-- -----------------------------------------------------------------------
+         VIEW 5: CARE JOURNEY TRACKING & DEPARTURE READINESS ENGINE
+         ----------------------------------------------------------------------- -->
+    <section id="view-track" class="app-view">
+      <div class="card-panel">
+        <h2 class="page-title" data-i18n="track_title">Track Care Journey</h2>
+        <p class="page-subtitle">Track your appointment verification, driver matching and Departure Readiness status in real-time.</p>
+
+        <!-- Search Bar -->
+        <div style="display: flex; gap: 12px; max-width: 600px; margin-bottom: 24px;">
+          <input type="text" id="track-search-input" class="form-input" data-i18n-placeholder="track_input_placeholder" placeholder="Enter Journey ID (e.g. RC-2026-1001) or Mobile Number" value="RC-2026-1001">
+          <button class="btn btn-primary" onclick="app.searchJourney()" data-i18n="track_btn">Find Journey</button>
+        </div>
+
+        <div id="track-result-container">
+          <!-- Populated dynamically with Journey Card, Departure Readiness Widget and Timeline -->
+        </div>
+      </div>
+    </section>
+
+    <!-- -----------------------------------------------------------------------
+         VIEW 6: FACILITY STAFF DASHBOARD
+         ----------------------------------------------------------------------- -->
+    <section id="view-facility-portal" class="app-view">
+      <div class="card-panel">
+        <div class="flex-between mb-16 flex-wrap">
+          <div>
+            <span class="badge-tag badge-recommended">FACILITY STAFF PORTAL</span>
+            <h2 class="page-title" id="staff-portal-title" data-i18n="staff_dashboard_title">Facility Staff Portal</h2>
+            <p class="page-subtitle" id="staff-portal-subtitle">Pollachi Government Taluk Hospital (Chief Medical Officer)</p>
+          </div>
+          <div style="display: flex; gap: 10px;">
+            <button class="btn btn-outline" onclick="app.verifyCurrentFacilityService()">
+              <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"/><polyline points="22 4 12 14.01 9 11.01"/></svg>
+              Verify Service Availability (48h)
+            </button>
+          </div>
+        </div>
+
+        <h3 style="font-size: 18px; font-weight: 700; margin-bottom: 14px;">Incoming Patient Journey Requests</h3>
+        <div style="overflow-x: auto;">
+          <table class="responsive-table">
+            <thead>
+              <tr>
+                <th>Journey ID</th>
+                <th>Patient</th>
+                <th>Village</th>
+                <th>Requested Service</th>
+                <th>Visit Date</th>
+                <th>Status</th>
+                <th>Actions</th>
+              </tr>
+            </thead>
+            <tbody id="staff-requests-tbody">
+              <!-- Populated dynamically -->
+            </tbody>
+          </table>
+        </div>
+      </div>
+    </section>
+
+    <!-- -----------------------------------------------------------------------
+         VIEW 7: DRIVER COORDINATION PORTAL
+         ----------------------------------------------------------------------- -->
+    <section id="view-driver-portal" class="app-view">
+      <div class="card-panel">
+        <div class="flex-between mb-16 flex-wrap">
+          <div>
+            <span class="badge-tag badge-self">DRIVER COORDINATION PORTAL</span>
+            <h2 class="page-title" id="driver-portal-title" data-i18n="driver_dashboard_title">Driver Coordination Portal</h2>
+            <p class="page-subtitle" id="driver-portal-subtitle">Driver: Murugan S. (Auto TN-38-AX-4412) • Chettipalayam</p>
+          </div>
+          <div>
+            <span class="status-pill verified">Driver Verified & Active</span>
+          </div>
+        </div>
+
+        <div style="background: var(--bg-subtle); padding: 14px 18px; border-radius: var(--radius-md); margin-bottom: 20px; font-size: 14px; color: var(--text-muted);">
+          <strong>Patient Privacy Notice:</strong> Medical service details and diagnosis are confidential and withheld from driver view. Only pickup point, destination hospital, and patient phone are shown.
+        </div>
+
+        <h3 style="font-size: 18px; font-weight: 700; margin-bottom: 14px;">Available Transport Requests in Coverage Area</h3>
+        <div id="driver-requests-container" style="display: flex; flex-direction: column; gap: 14px;">
+          <!-- Populated dynamically -->
+        </div>
+      </div>
+    </section>
+
+    <!-- -----------------------------------------------------------------------
+         VIEW 8: ADMINISTRATOR DASHBOARD
+         ----------------------------------------------------------------------- -->
+    <section id="view-admin-portal" class="app-view">
+      <div class="card-panel">
+        <div class="flex-between mb-16 flex-wrap">
+          <div>
+            <span class="badge-tag badge-recommended">CENTRAL ADMINISTRATION</span>
+            <h2 class="page-title" data-i18n="admin_dashboard_title">Administration & Audit Portal</h2>
+            <p class="page-subtitle">Real-time health journey governance, facility verifications & audit trails</p>
+          </div>
+          <button class="btn btn-secondary" onclick="app.loadAdminOverview()">
+            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="23 4 23 10 17 10"/><polyline points="1 20 1 14 7 14"/><path d="M3.51 9a9 9 0 0 1 14.85-3.36L23 10M1 14l4.64 4.36A9 9 0 0 0 20.49 15"/></svg>
+            Refresh Data
+          </button>
+        </div>
+
+        <!-- Admin Sub-Navigation Tabs -->
+        <div style="display: flex; gap: 8px; margin-bottom: 24px; border-bottom: 2px solid var(--border-light); padding-bottom: 8px; flex-wrap: wrap;">
+          <button id="admin-tab-radar-btn" class="btn btn-primary" onclick="app.switchAdminSubTab('radar')" style="padding: 8px 16px; font-size: 14px;">
+            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><path d="M12 2a10 10 0 0 1 10 10"/><path d="M12 6a6 6 0 0 1 6 6"/><circle cx="12" cy="12" r="2"/></svg>
+            Village Health Demand Radar
+          </button>
+          <button id="admin-tab-facilities-btn" class="btn btn-secondary" onclick="app.switchAdminSubTab('facilities')" style="padding: 8px 16px; font-size: 14px;">
+            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="2" y="7" width="20" height="14" rx="2" ry="2"/><path d="M16 21V5a2 2 0 0 0-2-2h-4a2 2 0 0 0-2 2v16"/></svg>
+            Hospital Governance & Facilities
+          </button>
+          <button id="admin-tab-events-btn" class="btn btn-secondary" onclick="app.switchAdminSubTab('events')" style="padding: 8px 16px; font-size: 14px;">
+            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="22 12 18 12 15 21 9 3 6 12 2 12"/></svg>
+            System Audit Trail
+          </button>
+        </div>
+
+        <!-- ===================================================================
+             SUB-VIEW A: VILLAGE HEALTH DEMAND RADAR (INNOVATION #2)
+             =================================================================== -->
+        <div id="admin-subview-radar">
+          <div class="flex-between mb-16 flex-wrap">
+            <div>
+              <span class="badge-tag badge-recommended">INNOVATION #2: DEMAND RADAR</span>
+              <span class="badge-tag badge-self" style="margin-left: 6px;" data-i18n="demo_badge">SYNTHETIC DEMO PLATFORM</span>
+              <h3 style="font-size: 22px; font-weight: 800; color: var(--text-dark); margin-top: 6px;">Village Health Demand Radar</h3>
+              <p style="font-size: 14px; color: var(--text-muted);">
+                Aggregates patient access requests across rural clusters, detects repeat unmet service needs & generates evidence-based mobile camp proposals.
+              </p>
+            </div>
+            <div style="display: flex; gap: 10px; align-items: center; flex-wrap: wrap;">
+              <label style="font-size: 13px; font-weight: 600; color: var(--text-muted);">Reporting Window:</label>
+              <select id="radar-period-select" class="form-select" style="min-height: 38px; font-size: 13px; width: 160px;" onchange="app.loadDemandRadar()">
+                <option value="30" selected>Last 30 Days</option>
+                <option value="7">Last 7 Days</option>
+                <option value="90">Last 90 Days</option>
+                <option value="all">All-Time Cumulative</option>
+              </select>
+              <button class="btn btn-secondary" onclick="app.loadDemandRadar()" style="padding: 6px 12px; min-height: 38px; font-size: 13px;">
+                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="23 4 23 10 17 10"/><polyline points="1 20 1 14 7 14"/><path d="M3.51 9a9 9 0 0 1 14.85-3.36L23 10M1 14l4.64 4.36A9 9 0 0 0 20.49 15"/></svg>
+                Refresh Radar
+              </button>
+            </div>
+          </div>
+
+          <!-- Radar KPI Metrics -->
+          <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(170px, 1fr)); gap: 14px; margin-bottom: 24px;">
+            <div style="background: var(--bg-subtle); padding: 16px; border-radius: var(--radius-md); border-left: 4px solid var(--primary-teal);">
+              <div style="font-size: 12px; color: var(--text-muted); font-weight: 600;">Total Distinct Requests</div>
+              <div style="font-size: 26px; font-weight: 800; color: var(--text-dark);" id="radar-metric-total">-</div>
+            </div>
+            <div style="background: #FEF2F2; padding: 16px; border-radius: var(--radius-md); border-left: 4px solid var(--danger-red);">
+              <div style="font-size: 12px; color: var(--danger-red); font-weight: 700;">Documented Unmet Access</div>
+              <div style="font-size: 26px; font-weight: 800; color: var(--danger-red);" id="radar-metric-unmet">-</div>
+            </div>
+            <div style="background: #FFFBEB; padding: 16px; border-radius: var(--radius-md); border-left: 4px solid #D97706;">
+              <div style="font-size: 12px; color: #B45309; font-weight: 600;">Facility Failures / No Doctor</div>
+              <div style="font-size: 26px; font-weight: 800; color: #B45309;" id="radar-metric-facility-failures">-</div>
+            </div>
+            <div style="background: #FFF7ED; padding: 16px; border-radius: var(--radius-md); border-left: 4px solid #EA580C;">
+              <div style="font-size: 12px; color: #C2410C; font-weight: 600;">Transport Failures / No Auto</div>
+              <div style="font-size: 26px; font-weight: 800; color: #C2410C;" id="radar-metric-transport-failures">-</div>
+            </div>
+            <div style="background: #F8FAFC; padding: 16px; border-radius: var(--radius-md); border-left: 4px solid #64748B;">
+              <div style="font-size: 12px; color: var(--text-muted); font-weight: 600;">Old Unresolved (>7d Review)</div>
+              <div style="font-size: 26px; font-weight: 800; color: #475569;" id="radar-metric-old-unresolved">-</div>
+            </div>
+            <div style="background: #F0FDF4; padding: 16px; border-radius: var(--radius-md); border-left: 4px solid var(--healthcare-green);">
+              <div style="font-size: 12px; color: var(--healthcare-green-dark); font-weight: 600;">Voluntary Cancellations</div>
+              <div style="font-size: 26px; font-weight: 800; color: var(--healthcare-green-dark);" id="radar-metric-voluntary-excluded">-</div>
+              <div style="font-size: 10px; color: var(--text-muted);">Excluded from unmet count</div>
+            </div>
+          </div>
+
+          <!-- 2-Column Insight Cards: Top Requested Services & Village Demand -->
+          <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(320px, 1fr)); gap: 16px; margin-bottom: 24px;">
+            <div style="background: var(--bg-card); border: 1px solid var(--border-light); border-radius: var(--radius-md); padding: 18px;">
+              <h4 style="font-size: 16px; font-weight: 700; margin-bottom: 12px;">Top Requested Medical Services</h4>
+              <div id="radar-top-services-list" style="display: flex; flex-direction: column; gap: 10px;">
+                <!-- Populated dynamically -->
+              </div>
+            </div>
+            <div style="background: var(--bg-card); border: 1px solid var(--border-light); border-radius: var(--radius-md); padding: 18px;">
+              <h4 style="font-size: 16px; font-weight: 700; margin-bottom: 12px;">Village-Wise Healthcare Demand & Unmet Needs</h4>
+              <div id="radar-village-demand-list" style="display: flex; flex-direction: column; gap: 10px;">
+                <!-- Populated dynamically -->
+              </div>
+            </div>
+          </div>
+
+          <!-- Demand Clusters Table -->
+          <h4 style="font-size: 17px; font-weight: 700; margin-bottom: 12px;">Village Healthcare Demand Clusters & Bottlenecks</h4>
+          <div style="overflow-x: auto; margin-bottom: 28px;">
+            <table class="responsive-table">
+              <thead>
+                <tr>
+                  <th>Village</th>
+                  <th>Medical Service</th>
+                  <th>Total Requests</th>
+                  <th>Unmet Demand</th>
+                  <th>Facility Failures</th>
+                  <th>Transport Failures</th>
+                  <th>Primary Bottleneck</th>
+                  <th>Priority Level</th>
+                </tr>
+              </thead>
+              <tbody id="radar-clusters-tbody">
+                <!-- Populated dynamically -->
+              </tbody>
+            </table>
+          </div>
+
+          <!-- ===================================================================
+               OUTREACH PROPOSALS MANAGEMENT SECTION
+               =================================================================== -->
+          <div style="background: linear-gradient(180deg, #F0FDFA 0%, #FFFFFF 100%); border: 1px solid var(--primary-teal); border-radius: var(--radius-lg); padding: 24px; margin-bottom: 28px;">
+            <div class="flex-between mb-16 flex-wrap">
+              <div>
+                <span class="badge-tag badge-recommended">DATA-DRIVEN FIELD PROPOSALS</span>
+                <h4 style="font-size: 20px; font-weight: 800; color: var(--primary-teal-dark); margin-top: 4px;">
+                  Community Outreach Proposals & Mobile Health Camps
+                </h4>
+                <p style="font-size: 14px; color: var(--text-muted); max-width: 700px;">
+                  Automated proposals generated from aggregated rural demand bottlenecks. Administrators can review, endorse, or reject proposals.
+                </p>
+              </div>
+              <div>
+                <button class="btn btn-primary" onclick="app.generateOutreachProposals()">
+                  <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 5v14M5 12h14"/></svg>
+                  Generate Proposals from Radar
+                </button>
+              </div>
+            </div>
+
+            <!-- Proposals Cards Container -->
+            <div id="radar-proposals-container" style="display: grid; grid-template-columns: repeat(auto-fit, minmax(320px, 1fr)); gap: 16px; margin-bottom: 16px;">
+              <!-- Populated dynamically -->
+            </div>
+
+            <div style="font-size: 12px; color: var(--text-muted); background: #FFFFFF; border: 1px dashed var(--border-light); padding: 10px 14px; border-radius: var(--radius-md);">
+              <strong>Operational Disclaimer:</strong> Administrative proposal endorsement logs verified demand. Actual mobile clinic deployment or vehicle scheduling requires authorized District Health Officer (DHO) and participating hospital confirmation.
+            </div>
+          </div>
+        </div>
+
+        <!-- ===================================================================
+             SUB-VIEW B: HOSPITAL GOVERNANCE & FACILITIES
+             =================================================================== -->
+        <div id="admin-subview-facilities" class="hidden">
+          <!-- KPI Metrics Grid -->
+          <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(180px, 1fr)); gap: 16px; margin-bottom: 28px;">
+            <div style="background: var(--bg-subtle); padding: 18px; border-radius: var(--radius-md); border-left: 4px solid var(--primary-teal);">
+              <div style="font-size: 13px; color: var(--text-muted); font-weight: 600;">Total Journeys</div>
+              <div style="font-size: 28px; font-weight: 800; color: var(--text-dark);" id="admin-metric-total">-</div>
+            </div>
+            <div style="background: #F0FDF4; padding: 18px; border-radius: var(--radius-md); border-left: 4px solid var(--healthcare-green);">
+              <div style="font-size: 13px; color: var(--healthcare-green-dark); font-weight: 600;">Coordination Confirmed</div>
+              <div style="font-size: 28px; font-weight: 800; color: var(--healthcare-green-dark);" id="admin-metric-confirmed">-</div>
+            </div>
+            <div style="background: #FFFBEB; padding: 18px; border-radius: var(--radius-md); border-left: 4px solid var(--warning-amber);">
+              <div style="font-size: 13px; color: var(--warning-amber); font-weight: 600;">Pending Verifications</div>
+              <div style="font-size: 28px; font-weight: 800; color: var(--warning-amber);" id="admin-metric-pending">-</div>
+            </div>
+            <div style="background: #FEF2F2; padding: 18px; border-radius: var(--radius-md); border-left: 4px solid var(--danger-red);">
+              <div style="font-size: 13px; color: var(--danger-red); font-weight: 600;">Re-check / Cancelled</div>
+              <div style="font-size: 28px; font-weight: 800; color: var(--danger-red);" id="admin-metric-cancelled">-</div>
+            </div>
+            <div style="background: var(--bg-subtle); padding: 18px; border-radius: var(--radius-md); border-left: 4px solid var(--info-blue);">
+              <div style="font-size: 13px; color: var(--text-muted); font-weight: 600;">Active Facilities</div>
+              <div style="font-size: 28px; font-weight: 800; color: var(--text-dark);" id="admin-metric-facilities">-</div>
+            </div>
+          </div>
+
+          <!-- Facilities Status Table -->
+          <h3 style="font-size: 18px; font-weight: 700; margin-bottom: 12px;">Participating Healthcare Facilities</h3>
+          <div style="overflow-x: auto; margin-bottom: 28px;">
+            <table class="responsive-table">
+              <thead>
+                <tr>
+                  <th>Facility ID & Name</th>
+                  <th>District</th>
+                  <th>Verification Status</th>
+                  <th>Last Verified</th>
+                  <th>Valid Until</th>
+                  <th>Actions</th>
+                </tr>
+              </thead>
+              <tbody id="admin-facilities-tbody">
+                <!-- Populated dynamically -->
+              </tbody>
+            </table>
+          </div>
+        </div>
+
+        <!-- ===================================================================
+             SUB-VIEW C: SYSTEM AUDIT TRAIL
+             =================================================================== -->
+        <div id="admin-subview-events" class="hidden">
+          <h3 style="font-size: 18px; font-weight: 700; margin-bottom: 12px;">Audit Events Trail</h3>
+          <div style="max-height: 480px; overflow-y: auto;">
+            <table class="responsive-table">
+              <thead>
+                <tr>
+                  <th>Timestamp</th>
+                  <th>Journey ID</th>
+                  <th>Event Type</th>
+                  <th>Actor</th>
+                  <th>Description</th>
+                </tr>
+              </thead>
+              <tbody id="admin-events-tbody">
+                <!-- Populated dynamically -->
+              </tbody>
+            </table>
+          </div>
+        </div>
+      </div>
+    </section>
+
+  </main>
+
+  <!-- =========================================================================
+       MODAL 1: LANGUAGE SELECTION MODAL (FIRST SCREEN REQUIRED)
+       ========================================================================= -->
+  <div id="modal-language" class="modal-overlay hidden" role="dialog" aria-modal="true">
+    <div class="modal-content">
+      <div style="text-align: center; margin-bottom: 20px;">
+        <div style="width: 56px; height: 56px; margin: 0 auto 12px auto;">
+          <img src="/static/icons/icon-192.svg" alt="RuralCare" width="56" height="56">
+        </div>
+        <h2 style="font-size: 28px; font-weight: 800; color: var(--primary-teal-dark);" data-i18n="app_title">RuralCare</h2>
+        <h3 style="font-size: 16px; font-weight: 600; color: var(--healthcare-green-dark); margin-bottom: 8px;" data-i18n="app_tagline">Verified Care Journey</h3>
+        <p style="font-size: 15px; color: var(--text-muted);" data-i18n="app_subtitle">"Healthcare assistance made accessible to everyone."</p>
+      </div>
+
+      <div style="border-top: 1px solid var(--border-light); padding-top: 20px;">
+        <h4 style="font-size: 17px; font-weight: 700; text-align: center; margin-bottom: 16px;" data-i18n="choose_language">
+          Choose your preferred language
+        </h4>
+
+        <!-- 6 Required Indian Languages -->
+        <div class="language-grid">
+          <button class="lang-card-btn" data-lang-code="ta" onclick="app.selectLanguage('ta')">
+            <span class="native-name">1. தமிழ்</span>
+            <span class="eng-name">Tamil</span>
+          </button>
+          <button class="lang-card-btn" data-lang-code="en" onclick="app.selectLanguage('en')">
+            <span class="native-name">2. English</span>
+            <span class="eng-name">English</span>
+          </button>
+          <button class="lang-card-btn" data-lang-code="te" onclick="app.selectLanguage('te')">
+            <span class="native-name">3. తెలుగు</span>
+            <span class="eng-name">Telugu</span>
+          </button>
+          <button class="lang-card-btn" data-lang-code="ml" onclick="app.selectLanguage('ml')">
+            <span class="native-name">4. മലയാളം</span>
+            <span class="eng-name">Malayalam</span>
+          </button>
+          <button class="lang-card-btn" data-lang-code="kn" onclick="app.selectLanguage('kn')">
+            <span class="native-name">5. ಕನ್ನಡ</span>
+            <span class="eng-name">Kannada</span>
+          </button>
+          <button class="lang-card-btn" data-lang-code="hi" onclick="app.selectLanguage('hi')">
+            <span class="native-name">6. हिन्दी</span>
+            <span class="eng-name">Hindi</span>
+          </button>
+        </div>
+
+        <div style="text-align: center; margin-top: 20px;">
+          <button class="btn btn-primary btn-lg" style="width: 100%;" onclick="app.closeLanguageModal()" data-i18n="select_lang_btn">
+            Confirm Language & Continue
+          </button>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- =========================================================================
+       MODAL 2: ROLE SWITCHER / DEMO ACCOUNTS
+       ========================================================================= -->
+  <div id="modal-role" class="modal-overlay hidden" role="dialog" aria-modal="true">
+    <div class="modal-content">
+      <div class="flex-between mb-16">
+        <h3 style="font-size: 20px; font-weight: 700;">Switch Portal / Role</h3>
+        <button class="btn btn-secondary" onclick="app.closeRoleModal()" style="min-height: 36px; padding: 4px 10px;">✕</button>
+      </div>
+      <p style="font-size: 14px; color: var(--text-muted); margin-bottom: 20px;">
+        Select an authenticated test persona or citizen kiosk view:
+      </p>
+
+      <div style="display: flex; flex-direction: column; gap: 12px;">
+        <button class="lang-card-btn" onclick="app.switchRolePersona('citizen')">
+          <span style="font-size: 16px; font-weight: 700; color: var(--primary-teal-dark);">Citizen / Village Kiosk User</span>
+          <span style="font-size: 13px; color: var(--text-muted);">Assisted & self-service registration, voice input, journey tracking</span>
+        </button>
+        <button class="lang-card-btn" onclick="app.switchRolePersona('facility_pollachi')">
+          <span style="font-size: 16px; font-weight: 700; color: var(--healthcare-green-dark);">Dr. K. Revathi (CMO - Pollachi GH)</span>
+          <span style="font-size: 13px; color: var(--text-muted);">Facility Staff: Verify services, accept/reject appointment slots</span>
+        </button>
+        <button class="lang-card-btn" onclick="app.switchRolePersona('driver_murugan')">
+          <span style="font-size: 16px; font-weight: 700; color: #B45309;">Murugan S. (Driver TN-38-AX-4412)</span>
+          <span style="font-size: 13px; color: var(--text-muted);">Driver Portal: Accept rides, quote fare, confirm pickup & drop</span>
+        </button>
+        <button class="lang-card-btn" onclick="app.switchRolePersona('admin')">
+          <span style="font-size: 16px; font-weight: 700; color: var(--text-dark);">District Health Administration Officer</span>
+          <span style="font-size: 13px; color: var(--text-muted);">Administrator: Oversee all facilities, drivers, journeys & audit events</span>
+        </button>
+      </div>
+    </div>
+  </div>
+
+  <!-- =========================================================================
+       MODAL 3: PRINTABLE JOURNEY PASS
+       ========================================================================= -->
+  <div id="modal-journey-pass" class="modal-overlay hidden" role="dialog" aria-modal="true" aria-labelledby="journey-pass-title">
+    <div class="modal-content" style="max-width: 680px; width: 95%;">
+      <div class="flex-between mb-16 no-print">
+        <h3 id="journey-pass-title" style="font-size: 20px; font-weight: 700;" data-i18n="journey_pass_title">RuralCare – Verified Journey Pass</h3>
+        <button class="btn btn-secondary" onclick="app.closeJourneyPassModal()" style="min-height: 36px; padding: 4px 10px;">✕</button>
+      </div>
+
+      <div id="printable-journey-pass-content" class="journey-pass-container">
+        <div class="journey-pass-header">
+          <div style="font-size: 13px; text-transform: uppercase; font-weight: 800; letter-spacing: 0.1em; color: var(--text-muted);" data-i18n="journey_pass_header">GOVERNMENT OF TAMIL NADU • RURAL HEALTHCARE CONNECT</div>
+          <h2 style="font-size: 24px; font-weight: 800; margin: 6px 0;" data-i18n="journey_pass_title">Verified Journey Pass</h2>
+          <div style="font-size: 14px; color: #475569;" data-i18n="journey_pass_instruction">Carry this printed pass or show this screen at hospital registration and to your driver.</div>
+          <div class="journey-pass-seal" id="jp-seal">✓ COORDINATION_CONFIRMED</div>
+        </div>
+
+        <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 16px; margin-bottom: 16px; font-size: 15px; border-bottom: 1px solid #CBD5E1; padding-bottom: 16px;">
+          <div>
+            <div style="font-size: 12px; font-weight: 700; color: #64748B; text-transform: uppercase;" data-i18n="th_journey_id">CARE JOURNEY ID</div>
+            <div id="jp-journey-id" style="font-size: 20px; font-weight: 800; font-family: monospace; color: #0F172A;">RC-2026-XXXX</div>
+          </div>
+          <div>
+            <div style="font-size: 12px; font-weight: 700; color: #64748B; text-transform: uppercase;" data-i18n="th_patient">PATIENT & VILLAGE</div>
+            <div id="jp-patient-info" style="font-size: 17px; font-weight: 700;">-</div>
+          </div>
+        </div>
+
+        <div style="background: #F8FAFC; border: 1px solid #E2E8F0; border-radius: 8px; padding: 14px; margin-bottom: 14px;">
+          <h4 style="font-size: 15px; font-weight: 800; margin-bottom: 8px; color: #0F172A;" data-i18n="tab_facilities">HOSPITAL & APPOINTMENT</h4>
+          <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 8px; font-size: 14px;">
+            <div><strong>Hospital:</strong> <span id="jp-facility-name">-</span></div>
+            <div><strong>Department:</strong> <span id="jp-service">-</span></div>
+            <div><strong>Confirmed Date:</strong> <span id="jp-date">-</span></div>
+            <div><strong>Appointment Slot:</strong> <span id="jp-slot">-</span></div>
+          </div>
+        </div>
+
+        <div id="jp-transport-box" style="background: #FEF3C7; border: 1px solid #FDE68A; border-radius: 8px; padding: 14px; margin-bottom: 14px;">
+          <h4 style="font-size: 15px; font-weight: 800; margin-bottom: 8px; color: #92400E;" data-i18n="tab_drivers">TRANSPORT DETAILS</h4>
+          <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 8px; font-size: 14px; color: #78350F;">
+            <div><strong>Driver:</strong> <span id="jp-driver-name">-</span></div>
+            <div><strong>Vehicle Reg:</strong> <span id="jp-driver-reg">-</span></div>
+            <div><strong>Pickup Landmark:</strong> <span id="jp-pickup-landmark">-</span></div>
+            <div><strong>Confirmed Fare:</strong> <span id="jp-fare" style="font-weight: 800;">₹0 (Upfront Fixed)</span></div>
+          </div>
+        </div>
+
+        <div style="border-top: 1px solid #CBD5E1; padding-top: 12px; margin-bottom: 12px;">
+          <div style="font-size: 12px; font-weight: 700; color: #059669; margin-bottom: 4px;">
+            ✓ 7-POINT READINESS VERIFIED BY RURALCARE ENGINE:
+          </div>
+          <div style="font-size: 12px; color: #334155; line-height: 1.4;">
+            1. Facility Operational &middot; 2. Service Available &middot; 3. Appointment Slot Accepted &middot; 4. Local Driver Confirmed &middot; 5. Upfront Fare Agreed &middot; 6. Pickup Landmark Verified &middot; 7. Verification Fresh & Valid
+          </div>
+        </div>
+
+        <div style="font-size: 12px; color: #64748B; border-top: 1px dashed #CBD5E1; padding-top: 10px; display: flex; justify-content: space-between; flex-wrap: wrap; gap: 8px;">
+          <span>Confirmed At: <strong id="jp-timestamp">-</strong></span>
+          <span style="color: #DC2626; font-weight: 700;">Emergency: Call 108 Ambulance</span>
+        </div>
+      </div>
+
+      <div class="no-print" style="display: flex; justify-content: flex-end; gap: 12px; margin-top: 20px;">
+        <button type="button" class="btn btn-secondary" onclick="app.closeJourneyPassModal()" data-i18n="btn_close">Close</button>
+        <button type="button" class="btn btn-primary btn-lg" onclick="window.print()" data-i18n="btn_print_pass">🖨️ Print Pass</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- =========================================================================
+       MODAL 4: CITIZEN PATIENT AUTHENTICATION & PROFILE MODAL (PHASE 2)
+       ========================================================================= -->
+  <div id="modal-patient-auth" class="modal-overlay hidden" role="dialog" aria-modal="true">
+    <div class="modal-content" style="max-width: 620px; width: 95%;">
+      <div class="flex-between mb-16">
+        <div>
+          <span class="badge-tag badge-recommended">CITIZEN IDENTITY</span>
+          <h3 style="font-size: 22px; font-weight: 800; color: var(--primary-teal-dark); margin: 4px 0 0 0;">
+            Citizen Healthcare Portal
+          </h3>
+        </div>
+        <button class="btn btn-secondary" onclick="app.closePatientAuthModal()" style="min-height: 36px; padding: 4px 10px;">✕</button>
+      </div>
+
+      <!-- Auth Tabs: Login vs Register (hidden if already logged in) -->
+      <div id="patient-auth-tabs-container">
+        <div style="display: flex; border-bottom: 2px solid var(--border-light); margin-bottom: 20px;">
+          <button id="tab-patient-login-btn" class="btn btn-secondary active" onclick="app.switchPatientAuthTab('login')" style="flex: 1; border-radius: 0; border: none; font-weight: 700; padding: 10px 14px;">
+            Returning Patient Login
+          </button>
+          <button id="tab-patient-register-btn" class="btn btn-secondary" onclick="app.switchPatientAuthTab('register')" style="flex: 1; border-radius: 0; border: none; font-weight: 700; padding: 10px 14px;">
+            Register New Citizen
+          </button>
+        </div>
+
+        <!-- FORM 1: RETURNING PATIENT LOGIN -->
+        <div id="form-patient-login">
+          <p style="font-size: 14px; color: var(--text-muted); margin-bottom: 16px;">
+            Reconnect safely to your medical records, active care journey, and prescriptions:
+          </p>
+          <div class="form-group mb-14">
+            <label class="form-label" style="font-size: 13px;">Patient ID or 10-Digit Mobile Number</label>
+            <input type="text" id="patient-login-id" class="form-input" placeholder="e.g. PID-2026-1001 or 9842100001" value="PID-2026-1001">
+          </div>
+          <div class="form-group mb-18">
+            <label class="form-label" style="font-size: 13px;">Security Phone Verification (Last 4 digits or full number)</label>
+            <input type="password" id="patient-login-pin" class="form-input" placeholder="Enter last 4 digits of registered phone (e.g. 0001)" value="0001">
+            <small style="color: var(--text-muted); font-size: 11px;">Prevents predictable ID enumeration or snooping.</small>
+          </div>
+          <div style="display: flex; gap: 10px;">
+            <button class="btn btn-primary btn-lg" onclick="app.loginPatient()" style="flex: 1;">
+              🔐 Login & View Records
+            </button>
+          </div>
+        </div>
+
+        <!-- FORM 2: REGISTER NEW PATIENT -->
+        <div id="form-patient-register" class="hidden">
+          <p style="font-size: 14px; color: var(--text-muted); margin-bottom: 16px;">
+            Register once to receive your persistent Patient ID (PID-2026-XXXX):
+          </p>
+          <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 12px; margin-bottom: 14px;">
+            <div class="form-group">
+              <label class="form-label" style="font-size: 13px;">Citizen Full Name *</label>
+              <input type="text" id="patient-reg-name" class="form-input" placeholder="e.g. Meenakshi S.">
+            </div>
+            <div class="form-group">
+              <label class="form-label" style="font-size: 13px;">Age *</label>
+              <input type="number" id="patient-reg-age" class="form-input" placeholder="e.g. 62">
+            </div>
+          </div>
+          <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 12px; margin-bottom: 14px;">
+            <div class="form-group">
+              <label class="form-label" style="font-size: 13px;">10-Digit Mobile Number *</label>
+              <input type="tel" id="patient-reg-phone" class="form-input" placeholder="e.g. 9842102001">
+            </div>
+            <div class="form-group">
+              <label class="form-label" style="font-size: 13px;">Village / Panchayat *</label>
+              <select id="patient-reg-village" class="form-select">
+                <option value="Chettipalayam">Chettipalayam (செட்டிபாளையம்)</option>
+                <option value="Omalur">Omalur (ஓமலூர்)</option>
+                <option value="Melur Rural">Melur Rural (மேலூர்)</option>
+                <option value="Valparai Hills">Valparai Hills (வால்பாறை)</option>
+                <option value="Negamam">Negamam (நெகமம்)</option>
+                <option value="Thirumangalam West">Thirumangalam West (திருமங்கலம்)</option>
+              </select>
+            </div>
+          </div>
+          <div style="background: #F8FAFC; border: 1px solid #E2E8F0; border-radius: 6px; padding: 12px; margin-bottom: 16px;">
+            <label style="display: flex; align-items: flex-start; gap: 10px; cursor: pointer; font-size: 13px; color: #334155;">
+              <input type="checkbox" id="patient-reg-consent" checked style="width: 20px; height: 20px; margin-top: 2px;">
+              <span>
+                <strong>Informed Consent:</strong> I voluntarily consent to store my registration details for verified healthcare and transport coordination under RuralCare guidelines.
+              </span>
+            </label>
+          </div>
+          <button class="btn btn-success btn-lg" onclick="app.registerPatient()" style="width: 100%;">
+            ✓ Register Citizen & Assign ID
+          </button>
+        </div>
+      </div>
+
+      <!-- LOGGED-IN PROFILE VIEW (Populated when active session exists) -->
+      <div id="patient-profile-view" class="hidden">
+        <div style="background: #F0FDF4; border: 1.5px solid #059669; border-radius: 8px; padding: 16px; margin-bottom: 20px;">
+          <div class="flex-between flex-wrap gap-8">
+            <div>
+              <span style="font-size: 11px; font-weight: 800; background: #DCFCE7; color: #166534; padding: 2px 8px; border-radius: 4px; text-transform: uppercase;">VERIFIED CITIZEN</span>
+              <h4 id="prof-patient-name" style="font-size: 20px; font-weight: 800; color: #064E3B; margin: 4px 0 0 0;">-</h4>
+              <div style="font-size: 13px; color: #047857; margin-top: 2px;">
+                Patient ID: <strong id="prof-patient-id" style="font-family: monospace;">PID-2026-XXXX</strong> • Age: <span id="prof-patient-age">-</span> yrs • Village: <span id="prof-patient-village">-</span>
+              </div>
+            </div>
+            <button class="btn btn-secondary" onclick="app.logoutPatient()" style="padding: 4px 12px; min-height: 32px; font-size: 12px;">Logout</button>
+          </div>
+        </div>
+
+        <!-- Active Journey Quick Card -->
+        <div id="prof-active-journey-card" class="mb-20" style="background: #FFFFFF; border: 1px solid var(--border-light); border-radius: 8px; padding: 14px;">
+          <div class="flex-between mb-8">
+            <span style="font-size: 12px; font-weight: 800; color: #64748B; text-transform: uppercase;">Active Care Journey</span>
+            <span id="prof-active-status-badge" class="status-pill status-pending">Status</span>
+          </div>
+          <div id="prof-active-journey-details" style="font-size: 14px; color: #1E293B; margin-bottom: 12px;"></div>
+          <button id="prof-btn-track-active" class="btn btn-primary" style="width: 100%; min-height: 38px;" onclick="app.viewPatientActiveJourney()">
+            📍 Open Live Journey Tracker & Readiness Check
+          </button>
+        </div>
+
+        <!-- Prescriptions & Pharmacy Access List -->
+        <div class="mb-20">
+          <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 10px; flex-wrap: wrap; gap: 8px;">
+            <h4 style="font-size: 15px; font-weight: 800; color: #0F172A; margin: 0;">
+              💊 Prescriptions & Pharmacy Medicine Access (Phase 8)
+            </h4>
+            <button type="button" class="btn btn-outline" style="font-size: 11px; padding: 2px 8px; min-height: 26px;" onclick="app.promptUploadPrescription()">
+              + Upload Prescription
+            </button>
+          </div>
+          <div id="prof-prescriptions-list" style="display: flex; flex-direction: column; gap: 10px;">
+            <!-- Populated dynamically -->
+          </div>
+        </div>
+
+        <!-- Past Care Journeys -->
+        <div>
+          <h4 style="font-size: 15px; font-weight: 800; color: #0F172A; margin-bottom: 10px;">
+            📜 Care Journey History
+          </h4>
+          <div id="prof-journeys-history" style="max-height: 200px; overflow-y: auto;">
+            <!-- Populated dynamically -->
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- =========================================================================
+       MODAL 5: ATTENDING DOCTOR CLINICAL REVIEW & SLOT ASSIGNMENT (PHASE 5)
+       ========================================================================= -->
+  <div id="modal-doctor-review" class="modal-overlay hidden" role="dialog" aria-modal="true">
+    <div class="modal-content" style="max-width: 680px; width: 95%;">
+      <div class="flex-between mb-16">
+        <div>
+          <span class="badge-tag badge-recommended">DOCTOR CLINICAL REVIEW</span>
+          <h3 style="font-size: 20px; font-weight: 800; color: var(--primary-teal-dark); margin: 4px 0 0 0;">
+            Attending Physician Assessment
+          </h3>
+        </div>
+        <button class="btn btn-secondary" onclick="app.closeDoctorReviewModal()" style="min-height: 36px; padding: 4px 10px;">✕</button>
+      </div>
+
+      <div style="background: #F0FDF4; border: 1px solid #BBF7D0; border-radius: 6px; padding: 12px 14px; margin-bottom: 16px; font-size: 13px; color: #166534;">
+        ⚖️ <strong>Clinical Governance Disclaimer:</strong> Doctor clinical assessment is strictly determined by the medical officer. Zero automated AI medical diagnoses. Doctor assessments are stored separately from patient-reported symptoms.
+      </div>
+
+      <!-- Patient & Journey Summary -->
+      <div style="background: #F8FAFC; border: 1px solid #E2E8F0; border-radius: 8px; padding: 14px; margin-bottom: 16px;">
+        <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 10px; font-size: 14px;">
+          <div><strong>Journey ID:</strong> <span id="doc-review-jid" style="font-family: monospace; font-weight: 700;">-</span></div>
+          <div><strong>Patient ID:</strong> <span id="doc-review-pid" style="font-family: monospace; font-weight: 700;">-</span></div>
+          <div><strong>Patient:</strong> <span id="doc-review-pname">-</span></div>
+          <div><strong>Contact (Masked):</strong> <span id="doc-review-phone">-</span></div>
+          <div><strong>Village:</strong> <span id="doc-review-village">-</span></div>
+          <div><strong>Scheduled Date:</strong> <span id="doc-review-date">-</span></div>
+        </div>
+        <div style="margin-top: 10px; padding-top: 10px; border-top: 1px dashed #CBD5E1; font-size: 13px;">
+          <strong>Patient-Reported Need / Symptoms:</strong>
+          <div id="doc-review-symptoms" style="color: #0F172A; font-weight: 600; margin-top: 2px;">-</div>
+        </div>
+      </div>
+
+      <!-- Doctor Assessment Form -->
+      <div class="form-group mb-14">
+        <label class="form-label" style="font-size: 13px;">1. Review Action *</label>
+        <div style="display: flex; gap: 14px;">
+          <label style="display: flex; align-items: center; gap: 6px; font-weight: 700; cursor: pointer;">
+            <input type="radio" name="doc-action" value="accept" checked onchange="app.toggleDoctorActionFields(true)">
+            <span style="color: #059669;">✓ Accept Appointment & Assign Slot</span>
+          </label>
+          <label style="display: flex; align-items: center; gap: 6px; font-weight: 700; cursor: pointer;">
+            <input type="radio" name="doc-action" value="reject" onchange="app.toggleDoctorActionFields(false)">
+            <span style="color: #DC2626;">✕ Reject Appointment</span>
+          </label>
+        </div>
+      </div>
+
+      <!-- Clinical Urgency (Mandatory Doctor Assessment) -->
+      <div class="form-group mb-14">
+        <label class="form-label" style="font-size: 13px;">2. Doctor Clinical Urgency Classification * (Physician Determined)</label>
+        <div style="display: flex; gap: 12px; flex-wrap: wrap;">
+          <label style="display: flex; align-items: center; gap: 6px; background: #F1F5F9; padding: 6px 14px; border-radius: 6px; cursor: pointer;">
+            <input type="radio" name="doc-urgency" value="ROUTINE" checked>
+            <span>🟢 ROUTINE</span>
+          </label>
+          <label style="display: flex; align-items: center; gap: 6px; background: #FEF3C7; padding: 6px 14px; border-radius: 6px; cursor: pointer;">
+            <input type="radio" name="doc-urgency" value="URGENT">
+            <span style="color: #B45309; font-weight: 700;">🟡 URGENT</span>
+          </label>
+          <label style="display: flex; align-items: center; gap: 6px; background: #EFF6FF; padding: 6px 14px; border-radius: 6px; cursor: pointer;">
+            <input type="radio" name="doc-urgency" value="MONITORING">
+            <span style="color: #1D4ED8; font-weight: 700;">🔵 MONITORING</span>
+          </label>
+        </div>
+      </div>
+
+      <!-- Slot Selection (with Double Booking Prevention) -->
+      <div id="doc-slot-container" class="form-group mb-14">
+        <label class="form-label" style="font-size: 13px;">3. Assign Outpatient Slot * (Double-Booking Protected)</label>
+        <select id="doc-slot-select" class="form-select">
+          <option value="10:00 AM - 10:30 AM">10:00 AM - 10:30 AM (Morning OPD)</option>
+          <option value="10:30 AM - 11:00 AM">10:30 AM - 11:00 AM (Morning OPD)</option>
+          <option value="11:00 AM - 11:30 AM">11:00 AM - 11:30 AM (Specialist Ward)</option>
+          <option value="11:30 AM - 12:00 PM">11:30 AM - 12:00 PM (Outpatient Desk)</option>
+          <option value="02:00 PM - 02:30 PM">02:00 PM - 02:30 PM (Afternoon Clinic)</option>
+          <option value="02:30 PM - 03:00 PM">02:30 PM - 03:00 PM (Afternoon Clinic)</option>
+        </select>
+      </div>
+
+      <!-- Doctor Clinical Notes -->
+      <div class="form-group mb-14">
+        <label class="form-label" style="font-size: 13px;">4. Attending Doctor Clinical Notes</label>
+        <textarea id="doc-clinical-notes" class="form-input" rows="2" placeholder="Clinical notes, pre-examination recommendations..."></textarea>
+      </div>
+
+      <!-- Doctor Prescription / Medications -->
+      <div id="doc-rx-container" class="form-group mb-18">
+        <label class="form-label" style="font-size: 13px;">5. Prescribed Medications (One per line: Name, Dosage, Duration)</label>
+        <textarea id="doc-prescription-notes" class="form-input" rows="3" placeholder="e.g.&#10;Metformin 500mg, 1 tablet twice daily, 30 days&#10;Amlodipine 5mg, 1 tablet at night, 30 days"></textarea>
+        <small style="color: var(--text-muted); font-size: 11px;">Automatically generates verified digital prescription with pharmacy stock linkage & 30-day refill reminder.</small>
+      </div>
+
+      <div style="display: flex; justify-content: flex-end; gap: 10px;">
+        <button class="btn btn-secondary" onclick="app.closeDoctorReviewModal()">Cancel</button>
+        <button class="btn btn-primary btn-lg" onclick="app.submitDoctorReview()">
+          Submit Doctor Review & Update Journey
+        </button>
+      </div>
+    </div>
+  </div>
+
+  <!-- =========================================================================
+       MODAL 6: PHARMACY MEDICINE ORDERING & STOCK VERIFICATION (PHASE 8)
+       ========================================================================= -->
+  <div id="modal-pharmacy-order" class="modal-overlay hidden" role="dialog" aria-modal="true">
+    <div class="modal-content" style="max-width: 660px; width: 95%;">
+      <div class="flex-between mb-16">
+        <div>
+          <span class="badge-tag badge-recommended">RURAL PHARMACY ACCESS</span>
+          <h3 style="font-size: 20px; font-weight: 800; color: var(--primary-teal-dark); margin: 4px 0 0 0;">
+            Medicine Order & Pharmacy Stock
+          </h3>
+        </div>
+        <button class="btn btn-secondary" onclick="app.closePharmacyOrderModal()" style="min-height: 36px; padding: 4px 10px;">✕</button>
+      </div>
+
+      <!-- Prescription Summary -->
+      <div id="pharm-rx-summary" style="background: #F8FAFC; border: 1px solid #E2E8F0; border-radius: 8px; padding: 14px; margin-bottom: 16px;">
+        <!-- Populated dynamically -->
+      </div>
+
+      <!-- Pharmacy Selector with Live Stock Status -->
+      <div class="form-group mb-14">
+        <label class="form-label" style="font-size: 13px;">Select Verified Rural Pharmacy *</label>
+        <select id="pharm-select" class="form-select" onchange="app.onPharmacySelected()">
+          <option value="PHARM-01">Pollachi Jan Aushadhi Rural Medicals (Coimbatore) - Verified</option>
+          <option value="PHARM-02">Omalur Community Health Pharmacy (Salem) - Verified</option>
+          <option value="PHARM-03">Melur Rural Cooperative Pharmacy (Madurai) - Verified</option>
+        </select>
+      </div>
+
+      <!-- Live Stock Preview Card -->
+      <div id="pharm-stock-preview" style="background: #FFFFFF; border: 1px solid var(--border-light); border-radius: 8px; padding: 14px; margin-bottom: 16px;">
+        <!-- Populated dynamically with medicine stock indicators -->
+      </div>
+
+      <!-- Fulfillment Choice: Pickup vs Delivery -->
+      <div class="form-group mb-14">
+        <label class="form-label" style="font-size: 13px;">Fulfillment Option</label>
+        <div style="display: flex; gap: 14px;">
+          <label style="display: flex; align-items: center; gap: 6px; font-weight: 700; cursor: pointer;">
+            <input type="radio" name="pharm-fulfillment" value="PICKUP" checked onchange="document.getElementById('pharm-delivery-addr-row').classList.add('hidden')">
+            <span>🏪 Free Pharmacy Pickup</span>
+          </label>
+          <label style="display: flex; align-items: center; gap: 6px; font-weight: 700; cursor: pointer;">
+            <input type="radio" name="pharm-fulfillment" value="DELIVERY" onchange="document.getElementById('pharm-delivery-addr-row').classList.remove('hidden')">
+            <span>🚚 Rural Home Delivery (₹20)</span>
+          </label>
+        </div>
+      </div>
+
+      <div id="pharm-delivery-addr-row" class="form-group mb-14 hidden">
+        <label class="form-label" style="font-size: 13px;">Home Delivery Address in Village</label>
+        <input type="text" id="pharm-delivery-address" class="form-input" placeholder="Door number, street, landmark...">
+      </div>
+
+      <!-- 30-day Refill Reminder -->
+      <div style="background: #F0FDF4; border: 1px solid #BBF7D0; border-radius: 6px; padding: 12px; margin-bottom: 16px;">
+        <label style="display: flex; align-items: center; gap: 8px; font-size: 13px; font-weight: 700; color: #166534; cursor: pointer;">
+          <input type="checkbox" id="pharm-refill-checkbox" checked style="width: 18px; height: 18px;">
+          <span>Schedule 30-Day Long-Term Medication Refill Reminder</span>
+        </label>
+      </div>
+
+      <div style="display: flex; justify-content: flex-end; gap: 10px;">
+        <button class="btn btn-secondary" onclick="app.closePharmacyOrderModal()">Cancel</button>
+        <button class="btn btn-primary btn-lg" onclick="app.submitPharmacyOrder()">
+          Confirm Medicine Order
+        </button>
+      </div>
+    </div>
+  </div>
+
+  <!-- =========================================================================
+       OFFLINE SYNCHRONIZATION MANAGER MODAL (FEATURE 5)
+       ========================================================================= -->
+  <div id="offline-sync-modal" class="modal-backdrop hidden" onclick="if(event.target === this) offlineDB.closeSyncManager()">
+    <div class="modal-card" style="max-width: 680px; max-height: 90vh; display: flex; flex-direction: column;">
+      <div style="display: flex; justify-content: space-between; align-items: center; border-bottom: 1px solid var(--border-light); padding-bottom: 14px; margin-bottom: 16px;">
+        <div style="display: flex; align-items: center; gap: 10px;">
+          <span style="font-size: 26px;">📡</span>
+          <div>
+            <h3 style="font-size: 18px; font-weight: 800; margin: 0; color: #0F172A;" data-i18n="offline_sync_manager_title">Offline Sync Manager</h3>
+            <p style="font-size: 12px; color: var(--text-muted); margin: 0;">Preserves requests safely in IndexedDB & syncs automatically</p>
+          </div>
+        </div>
+        <button class="btn btn-secondary" onclick="offlineDB.closeSyncManager()" style="padding: 4px 10px; min-height: 32px;" aria-label="Close modal">✕</button>
+      </div>
+
+      <!-- Controls & Quick Offline Actions -->
+      <div style="display: flex; justify-content: space-between; align-items: center; background: #F8FAFC; border: 1px solid var(--border-light); border-radius: var(--radius-md); padding: 12px 16px; margin-bottom: 16px; flex-wrap: wrap; gap: 10px;">
+        <div style="display: flex; align-items: center; gap: 10px;">
+          <span style="font-size: 13px; font-weight: 600;">Status:</span>
+          <span id="modal-network-status" class="status-pill online">Checking...</span>
+        </div>
+        <div style="display: flex; gap: 8px;">
+          <button id="btn-manual-sync" class="btn btn-primary" onclick="offlineDB.syncPendingRequests()" style="padding: 6px 16px; font-size: 13px;">
+            🔄 <span data-i18n="sync_now_btn">Sync Now</span>
+          </button>
+        </div>
+      </div>
+
+      <!-- Quick Offline Test Injector (Assisted Operator / QA) -->
+      <div style="background: #F1F5F9; border-radius: 6px; padding: 8px 12px; margin-bottom: 14px; font-size: 12px; display: flex; align-items: center; justify-content: space-between; flex-wrap: wrap; gap: 6px;">
+        <span style="color: #475569; font-weight: 600;">Queue Offline Test:</span>
+        <div style="display: flex; gap: 6px; flex-wrap: wrap;">
+          <button id="btn-queue-apt" class="btn btn-outline" onclick="app.recordSampleOfflineRequest('APPOINTMENT')" style="padding: 3px 8px; font-size: 11px;">+ Appointment</button>
+          <button id="btn-queue-med" class="btn btn-outline" onclick="app.recordSampleOfflineRequest('MEDICINE')" style="padding: 3px 8px; font-size: 11px;">+ Medicine</button>
+          <button id="btn-queue-trans" class="btn btn-outline" onclick="app.recordSampleOfflineRequest('TRANSPORT')" style="padding: 3px 8px; font-size: 11px;">+ Transport</button>
+          <button id="btn-queue-demand" class="btn btn-outline" onclick="app.recordSampleOfflineRequest('COMMUNITY_DEMAND')" style="padding: 3px 8px; font-size: 11px;">+ Demand</button>
+          <button id="btn-test-emg" class="btn btn-outline" onclick="offlineDB.showEmergencyGuidance()" style="padding: 3px 8px; font-size: 11px; color: #DC2626; border-color: #FCA5A5;">🚨 108 Emergency</button>
+        </div>
+      </div>
+
+      <!-- List Container -->
+      <div id="sync-manager-list" style="overflow-y: auto; flex: 1; min-height: 180px; max-height: 420px; padding-right: 4px;">
+        <!-- Populated dynamically by offlineDB.renderSyncModalList() -->
+      </div>
+
+      <!-- Privacy & Footer -->
+      <div style="border-top: 1px solid var(--border-light); padding-top: 14px; margin-top: 16px; font-size: 12px; color: var(--text-muted); display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 8px;">
+        <span>🔒 <strong>Privacy Guard:</strong> No audio recordings or sensitive medical histories stored locally.</span>
+        <button class="btn btn-secondary" onclick="offlineDB.closeSyncManager()" style="padding: 6px 16px; font-size: 13px;">Close</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- =========================================================================
+       EMERGENCY 108 GUIDANCE MODAL (FEATURE 5)
+       ========================================================================= -->
+  <div id="emergency-guidance-modal" class="modal-backdrop hidden" onclick="if(event.target === this) this.classList.add('hidden')">
+    <div class="modal-card" style="max-width: 560px; border: 2px solid #DC2626; background: #FFF5F5;">
+      <div style="display: flex; align-items: center; gap: 12px; margin-bottom: 14px;">
+        <span style="font-size: 36px;">🚨</span>
+        <div>
+          <h3 style="font-size: 20px; font-weight: 800; color: #991B1B; margin: 0;" data-i18n="emergency_modal_title">Immediate Medical Emergency</h3>
+          <p style="font-size: 13px; color: #B91C1C; margin: 0;" data-i18n="emergency_modal_sub">Tamil Nadu Emergency Ambulance Dispatch (108)</p>
+        </div>
+      </div>
+
+      <div id="emergency-guidance-text" style="font-size: 15px; line-height: 1.5; color: #7F1D1D; margin-bottom: 18px; background: #FEE2E2; padding: 14px; border-radius: var(--radius-md);">
+        <strong>WARNING:</strong> This request indicates critical or life-threatening symptoms (e.g., severe chest pain, loss of consciousness, trauma). Emergency cases <strong>cannot wait for offline background synchronization or routine outpatient scheduling</strong>.
+      </div>
+
+      <div style="display: flex; flex-direction: column; gap: 10px; margin-bottom: 18px;">
+        <a href="tel:108" class="emergency-dial-pill" style="font-size: 18px; font-weight: 800; padding: 14px 20px; text-align: center; border-radius: var(--radius-md); display: block; text-decoration: none;">
+          📞 DIAL 108 (Tamil Nadu Free Ambulance)
+        </a>
+        <a href="tel:112" class="emergency-dial-pill" style="background-color: #7F1D1D; font-size: 16px; font-weight: 700; padding: 12px 20px; text-align: center; border-radius: var(--radius-md); display: block; text-decoration: none;">
+          📞 DIAL 112 (National Emergency Support)
+        </a>
+      </div>
+
+      <div style="display: flex; justify-content: flex-end; gap: 10px;">
+        <button class="btn btn-secondary" onclick="document.getElementById('emergency-guidance-modal').classList.add('hidden')" style="padding: 8px 18px;">
+          I Understand / Close
+        </button>
+      </div>
+    </div>
+  </div>
+
+  <!-- =========================================================================
+       MOBILE BOTTOM NAVIGATION BAR (FEATURE 8)
+       ========================================================================= -->
+  <nav id="mobile-bottom-nav" class="mobile-bottom-nav" aria-label="Mobile Bottom Navigation">
+    <button type="button" class="mobile-nav-btn active" data-target-view="method-select" onclick="app.showView('method-select')" aria-label="Home and Registration">
+      <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M3 9l9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"/></svg>
+      <span data-i18n="nav_home">Home</span>
+    </button>
+    <button type="button" class="mobile-nav-btn" data-target-view="directory" onclick="app.showView('directory')" aria-label="Healthcare Facility Directory">
+      <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M22 19a2 2 0 0 1-2 2H4a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h5l2 3h9a2 2 0 0 1 2 2z"/></svg>
+      <span data-i18n="nav_directory">Directory</span>
+    </button>
+    <button type="button" class="mobile-nav-btn" data-target-view="track" onclick="app.showView('track')" aria-label="Track Care Journey">
+      <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg>
+      <span data-i18n="nav_track">Track</span>
+    </button>
+    <button type="button" class="mobile-nav-btn" onclick="app.openPatientAuthModal()" aria-label="Citizen Account and Past Records">
+      <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"/><circle cx="12" cy="7" r="4"/></svg>
+      <span data-i18n="nav_citizen">Citizen</span>
+    </button>
+    <button type="button" class="mobile-nav-btn" onclick="app.openMobileMoreMenu()" aria-label="More Features, Portals & Sync">
+      <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="1.5"/><circle cx="19" cy="12" r="1.5"/><circle cx="5" cy="12" r="1.5"/></svg>
+      <span data-i18n="nav_more">More</span>
+    </button>
+  </nav>
+
+  <!-- =========================================================================
+       MOBILE MORE MENU MODAL / SHEET (FEATURE 8)
+       ========================================================================= -->
+  <div id="modal-mobile-more" class="modal-backdrop hidden" onclick="if(event.target === this) app.closeMobileMoreMenu()">
+    <div class="modal-card mobile-more-modal-card">
+      <div style="display: flex; justify-content: space-between; align-items: center; border-bottom: 1px solid var(--border-light); padding-bottom: 12px; margin-bottom: 16px;">
+        <div style="display: flex; align-items: center; gap: 8px;">
+          <span style="font-size: 22px;">📱</span>
+          <h3 style="font-size: 17px; font-weight: 800; color: #0F172A; margin: 0;">More RuralCare Features</h3>
+        </div>
+        <button class="btn btn-secondary" onclick="app.closeMobileMoreMenu()" style="padding: 4px 10px; min-height: 36px; min-width: 36px;" aria-label="Close menu">✕</button>
+      </div>
+
+      <div class="mobile-more-grid">
+        <button type="button" class="mobile-more-item" onclick="app.showView('facility-portal'); app.closeMobileMoreMenu();">
+          <span class="more-icon">🏥</span>
+          <div class="more-text">
+            <strong>Facility & Doctor Portal</strong>
+            <small>Review clinical triage & assign slots</small>
+          </div>
+        </button>
+
+        <button type="button" class="mobile-more-item" onclick="app.showView('driver-portal'); app.closeMobileMoreMenu();">
+          <span class="more-icon">🛺</span>
+          <div class="more-text">
+            <strong>Driver Transit Portal</strong>
+            <small>Accept rides, quote fares & complete transit</small>
+          </div>
+        </button>
+
+        <button type="button" class="mobile-more-item" onclick="app.showAdminRadarTab(); app.closeMobileMoreMenu();">
+          <span class="more-icon">📡</span>
+          <div class="more-text">
+            <strong>Village Demand Radar</strong>
+            <small>Bottlenecks & mobile camp outreach</small>
+          </div>
+        </button>
+
+        <button type="button" class="mobile-more-item" onclick="app.showView('admin-portal'); app.closeMobileMoreMenu();">
+          <span class="more-icon">🛡️</span>
+          <div class="more-text">
+            <strong>District Admin Dashboard</strong>
+            <small>Facilities, audits & service verification</small>
+          </div>
+        </button>
+
+        <button type="button" class="mobile-more-item" onclick="offlineDB.openSyncManager(); app.closeMobileMoreMenu();">
+          <span class="more-icon">📶</span>
+          <div class="more-text">
+            <strong>Offline Sync Queue</strong>
+            <small>Manage local IndexedDB records</small>
+          </div>
+        </button>
+
+        <button type="button" class="mobile-more-item" onclick="app.openLanguageModal(); app.closeMobileMoreMenu();">
+          <span class="more-icon">🌐</span>
+          <div class="more-text">
+            <strong>Language / மொழி</strong>
+            <small>Switch தமிழ் / English</small>
+          </div>
+        </button>
+
+        <button type="button" class="mobile-more-item" onclick="app.openRoleModal(); app.closeMobileMoreMenu();">
+          <span class="more-icon">🔄</span>
+          <div class="more-text">
+            <strong>Switch Portal Role</strong>
+            <small>Patient, Staff, Driver, Admin</small>
+          </div>
+        </button>
+
+        <button type="button" class="mobile-more-item emergency" onclick="offlineDB.showEmergencyGuidance(); app.closeMobileMoreMenu();">
+          <span class="more-icon">🚨</span>
+          <div class="more-text">
+            <strong style="color: #DC2626;">108 Emergency Info</strong>
+            <small>Acute trauma & ambulance helpline</small>
+          </div>
+        </button>
+      </div>
+    </div>
+  </div>
+
+  <!-- Scripts -->
+  <script src="/static/js/i18n/translations.js"></script>
+  <script src="/static/js/i18n/i18n.js"></script>
+  <script src="/static/js/offline_db.js"></script>
+  <script src="/static/js/speech.js"></script>
+  <script src="/static/js/app.js"></script>
+
+  <!-- PWA Service Worker Registration -->
+  <script>
+    if ('serviceWorker' in navigator) {
+      window.addEventListener('load', () => {
+        navigator.serviceWorker.register('/service-worker.js')
+          .then((reg) => console.log('[PWA] Service Worker registered scope:', reg.scope))
+          .catch((err) => console.warn('[PWA] Service Worker registration failed:', err));
+      });
+    }
+  </script>
+</body>
+</html>

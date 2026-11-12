@@ -1,0 +1,31 @@
+# Environment variables & secrets
+.env
+.env.*
+secrets/
+*firebase-adminsdk*.json
+*service-account*.json
+credentials*.json
+*.key.json
+
+# Python
+__pycache__/
+*.py[cod]
+*$py.class
+.venv/
+venv/
+ENV/
+*.log
+
+# Cache & Local database backups
+*.bak
+backup_tamil_repair/
+data/ruralcare_store.json
+data/*.json
+data/*.mp3
+data/tts_cache/
+data/backups/
+data/temp/
+
+# OS metadata
+.DS_Store
+Thumbs.db
