@@ -159,12 +159,14 @@ def synthesize_speech(text: str, voice: str = DEFAULT_VOICE, rate: str = "+0%") 
 
 @tts_bp.route("/voices", methods=["GET"])
 def get_voices():
-    """Return list of supported Azure Neural Tamil voices."""
+    """Return list of supported Azure Neural Tamil voices and fallback availability."""
     return jsonify({
         "success": True,
         "default_voice": DEFAULT_VOICE,
         "voices": list(SUPPORTED_VOICES.values()),
-        "azure_api_configured": bool(AZURE_SPEECH_KEY)
+        "azure_api_configured": bool(AZURE_SPEECH_KEY),
+        "edge_tts_available": EDGE_TTS_AVAILABLE,
+        "fallback_to_browser_available": True
     })
 
 
@@ -219,12 +221,14 @@ def synthesize_endpoint():
         return response
 
     except Exception as e:
-        print(f"[AzureTTS] Synthesis error: {e}")
+        print(f"[AzureTTS] Synthesis error (falling back to client browser TTS): {e}")
         return jsonify({
             "success": False,
-            "error": f"Tamil speech synthesis failed: {str(e)}",
+            "error": "TTS_SERVICE_UNAVAILABLE",
+            "message": f"Tamil speech synthesis failed or Azure credentials unavailable: {str(e)}",
+            "fallback_to_browser": True,
             "voice": voice
-        }), 500
+        }), 503
 
 
 @tts_bp.route("/audio/<filename>", methods=["GET"])

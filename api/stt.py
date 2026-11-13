@@ -315,7 +315,8 @@ def transcribe_audio():
             return jsonify({
                 "success": False,
                 "error": "STT_ENGINE_UNAVAILABLE",
-                "message": "குரல் அறிதல் சேவை தற்போது கிடைக்கவில்லை. தட்டச்சு செய்து உள்ளிடவும்."
+                "message": "குரல் அறிதல் சேவை தற்போது கிடைக்கவில்லை. தட்டச்சு செய்து உள்ளிடவும்.",
+                "fallback_to_browser": True
             }), 503
 
         if result.get("status") == "NO_SPEECH" or not result.get("text"):

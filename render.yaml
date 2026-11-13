@@ -17,7 +17,5 @@ services:
         generateValue: true
       - key: FIREBASE_CREDENTIALS_JSON
         sync: false
-      - key: AZURE_SPEECH_KEY
-        sync: false
       - key: AZURE_SPEECH_REGION
         value: eastus

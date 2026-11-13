@@ -944,25 +944,35 @@ class VoiceAssistant {
         await audio.play();
         return;
       } catch (err) {
-        console.error("[VoiceAssistant] Azure TTS failed:", err);
-        this.notifyMissingTamilVoice();
-        this.isSpeaking = false;
-        this.updateAudioPlayerUI(false);
-        if (callback) callback();
-        return;
+        console.warn("[VoiceAssistant] Backend Neural TTS unavailable, attempting browser speech fallback:", err);
+        const browserTaVoice = this.getBestVoice("ta-IN");
+        if (browserTaVoice && this.synth) {
+          console.log("[VoiceAssistant] Falling back to browser Tamil voice:", browserTaVoice.name);
+          this.speakWithBrowserVoice(text, "ta-IN", browserTaVoice, callback);
+          return;
+        } else {
+          this.notifyMissingTamilVoice();
+          this.isSpeaking = false;
+          this.updateAudioPlayerUI(false);
+          if (callback) callback();
+          return;
+        }
       }
     }
 
     // =========================================================================
     // 2. ENGLISH SPEECH OUTPUT: BROWSER SPEECH SYNTHESIS (en-IN)
     // =========================================================================
+    this.speakWithBrowserVoice(text, lang, voice, callback);
+  }
+
+  speakWithBrowserVoice(text, lang = "ta-IN", voice = null, callback = null) {
     if (!this.synth) {
       if (callback) callback();
       return;
     }
 
-    await this.ensureVoicesLoaded();
-    voice = this.getBestVoice(lang);
+    voice = voice || this.getBestVoice(lang);
     const cleanedSpeech = this.cleanSpeechText(text, lang);
     this.updateDebugVoiceUI(voice, lang, cleanedSpeech);
 
@@ -978,7 +988,7 @@ class VoiceAssistant {
     this.utteranceQueue = [...chunks];
     this.isSpeaking = true;
     this.isPaused = false;
-    this.updateAudioPlayerUI(true, "Playing", voice ? `${voice.name} (${voice.lang})` : lang);
+    this.updateAudioPlayerUI(true, "Playing (Browser Voice)", voice ? `${voice.name} (${voice.lang})` : lang);
 
     const playNextChunk = () => {
       if (this.utteranceQueue.length === 0) {
@@ -1406,6 +1416,13 @@ class VoiceAssistant {
         this.setMicrophoneState("TRANSCRIPTION READY");
         this.showTranscriptionForReview(data.transcription, data.engine, data.confidence);
       } else {
+        if (this.lastWebSpeechTranscript) {
+          const t = this.lastWebSpeechTranscript;
+          this.lastWebSpeechTranscript = "";
+          this.setMicrophoneState("TRANSCRIPTION READY");
+          this.showTranscriptionForReview(t, "Browser WebSpeech (Fallback)", 0.85);
+          return;
+        }
         const errorMsg = data.message || (this.languageMode === "ta"
           ? "சத்தம் தெளிவாகக் கேட்கவில்லை. மீண்டும் பேசவும் அல்லது கீழே உள்ள தட்டச்சுப் பெட்டியைப் பயன்படுத்தவும்."
           : "Speech was unclear. Please retry or enter manually.");
@@ -1414,7 +1431,14 @@ class VoiceAssistant {
         this.showManualFallbackInput();
       }
     } catch (err) {
-      console.error("[VoiceAssistant] STT fetch error:", err);
+      console.warn("[VoiceAssistant] STT fetch error, checking browser WebSpeech fallback:", err);
+      if (this.lastWebSpeechTranscript) {
+        const t = this.lastWebSpeechTranscript;
+        this.lastWebSpeechTranscript = "";
+        this.setMicrophoneState("TRANSCRIPTION READY");
+        this.showTranscriptionForReview(t, "Browser WebSpeech (Fallback)", 0.85);
+        return;
+      }
       this.setMicrophoneState("READY");
       const errTxt = this.languageMode === "ta"
         ? "குரல் அறிதல் சேவையில் பிழை. மீண்டும் பேசவும் அல்லது தட்டச்சு செய்யவும்."
