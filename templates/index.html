@@ -469,6 +469,10 @@
             </select>
           </div>
           <div class="form-group">
+            <label class="form-label" for="touch-patient-symptoms">Symptoms & Health Concerns (அறிகுறிகள் / குறிப்பிட்ட தேவை)</label>
+            <textarea id="touch-patient-symptoms" class="form-input" rows="2" placeholder="e.g. Fever for 3 days, vision problems, knee pain..."></textarea>
+          </div>
+          <div class="form-group">
             <label class="form-label" for="touch-preferred-date" data-i18n="preferred_date_label">Preferred Visit Date *</label>
             <input type="date" id="touch-preferred-date" class="form-input" required>
           </div>
@@ -680,7 +684,7 @@
             </div>
           </div>
 
-          <!-- Action Controls Row: Speak, Stop, Retry, Repeat -->
+          <!-- Action Controls Row: Speak, Stop, Retry, Repeat, and Conversational NEXT -->
           <div class="voice-actions-row" style="margin-top: 16px; display: flex; justify-content: center; gap: 10px; flex-wrap: wrap;">
             <button type="button" class="btn btn-primary" onclick="voiceAssistant.listen()">
               <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polygon points="5 3 19 12 5 21 5 3"/></svg>
@@ -697,6 +701,9 @@
             <button type="button" class="btn btn-outline" onclick="voiceAssistant.repeatQuestion()">
               <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polygon points="11 5 6 9 2 9 2 15 6 15 11 19 11 5"/><path d="M19.07 4.93a10 10 0 0 1 0 14.14M15.54 8.46a5 5 0 0 1 0 7.07"/></svg>
               <span data-i18n="voice_repeat_btn">Repeat Spoken Question</span>
+            </button>
+            <button id="btn-voice-next" type="button" class="btn btn-success" style="font-weight: 800; padding: 10px 22px; font-size: 15px; box-shadow: 0 4px 12px rgba(16, 185, 129, 0.25);" onclick="voiceAssistant.advanceToNextStep()">
+              <span id="voice-next-btn-text">அடுத்து / NEXT →</span>
             </button>
           </div>
 
@@ -917,8 +924,12 @@
               <input type="text" id="voice-review-patient_name" class="form-input">
             </div>
             <div class="form-group">
+              <label class="form-label" style="font-size: 13px;">Patient ID</label>
+              <input type="text" id="voice-review-patient_id" class="form-input" placeholder="Assigned on Confirmation" readonly style="background: #F1F5F9; color: #0284C7; font-weight: 700;">
+            </div>
+            <div class="form-group">
               <label class="form-label" style="font-size: 13px;" data-i18n="patient_age_label">Age</label>
-              <input type="number" id="voice-review-age" class="form-input">
+              <input type="number" id="voice-review-age" class="form-input" value="45">
             </div>
             <div class="form-group">
               <label class="form-label" style="font-size: 13px;" data-i18n="patient_phone_label">Contact Number</label>
@@ -926,19 +937,37 @@
             </div>
             <div class="form-group">
               <label class="form-label" style="font-size: 13px;" data-i18n="patient_village_label">Village</label>
-              <input type="text" id="voice-review-village" class="form-input">
+              <input type="text" id="voice-review-village" class="form-input" value="Chettipalayam">
             </div>
             <div class="form-group">
-              <label class="form-label" style="font-size: 13px;" data-i18n="select_service_label">Service Query</label>
-              <input type="text" id="voice-review-service_query" class="form-input" placeholder="General Medicine / Dialysis / Eye Care">
+              <label class="form-label" style="font-size: 13px;">Reported Symptoms & Health Need</label>
+              <input type="text" id="voice-review-symptoms" class="form-input" placeholder="e.g. Fever and headache">
+            </div>
+            <div class="form-group">
+              <label class="form-label" style="font-size: 13px;" data-i18n="select_facility_label">Preferred Healthcare Facility</label>
+              <input type="text" id="voice-review-facility" class="form-input" value="Pollachi Government Taluk Hospital">
+            </div>
+            <div class="form-group">
+              <label class="form-label" style="font-size: 13px;" data-i18n="preferred_date_label">Preferred Visit Date</label>
+              <input type="date" id="voice-review-date" class="form-input">
             </div>
             <div class="form-group">
               <label class="form-label" style="font-size: 13px;" data-i18n="step_transport_info">Transport Needed?</label>
               <div style="display: flex; align-items: center; gap: 8px; margin-top: 10px;">
-                <input type="checkbox" id="voice-review-transport_required" style="width: 22px; height: 22px;">
+                <input type="checkbox" id="voice-review-transport_required" style="width: 22px; height: 22px;" checked>
                 <label for="voice-review-transport_required" style="font-weight: 600;">Yes, transport assistance needed</label>
               </div>
             </div>
+            <div class="form-group">
+              <label class="form-label" style="font-size: 13px;">Auto-Assigned Pickup Location (No prompt)</label>
+              <input type="text" id="voice-review-pickup-landmark" class="form-input" value="RuralCare Self-Service Centre (Chettipalayam)" readonly style="background: #F8FAFC; color: #475569; font-weight: 600;">
+            </div>
+            <div class="form-group" style="grid-column: span 2;">
+              <label class="form-label" style="font-size: 13px;">Requested Pickup Readiness Time</label>
+              <input type="text" id="voice-review-pickup-time" class="form-input" value="09:30 AM" placeholder="e.g. 09:30 AM">
+            </div>
+            <!-- Keep hidden service_query for backwards compatibility -->
+            <input type="hidden" id="voice-review-service_query" value="">
           </div>
 
           <div id="voice-final-review" class="mt-24 text-center">
@@ -1016,36 +1045,45 @@
          ----------------------------------------------------------------------- -->
     <section id="view-facility-portal" class="app-view">
       <div class="card-panel">
-        <div class="flex-between mb-16 flex-wrap">
+        <div class="flex-between mb-16 flex-wrap" style="gap: 12px;">
           <div>
-            <span class="badge-tag badge-recommended">FACILITY STAFF PORTAL</span>
+            <span class="badge-tag badge-recommended">FACILITY STAFF & DOCTOR PORTAL</span>
             <h2 class="page-title" id="staff-portal-title" data-i18n="staff_dashboard_title">Facility Staff Portal</h2>
             <p class="page-subtitle" id="staff-portal-subtitle">Pollachi Government Taluk Hospital (Chief Medical Officer)</p>
           </div>
-          <div style="display: flex; gap: 10px;">
+          <div style="display: flex; gap: 10px; flex-wrap: wrap; align-items: center;">
+            <label for="staff-facility-select" style="font-size: 13px; font-weight: 700; color: #0F766E;">Facility:</label>
+            <select id="staff-facility-select" class="form-select" style="max-width: 280px; font-weight: 600; padding: 6px 10px; font-size: 13px;" onchange="app.changeStaffFacility(this.value)">
+              <option value="FAC-01" selected>Pollachi Government Taluk Hospital</option>
+              <option value="FAC-02">Negamam Upgraded Primary Health Centre</option>
+              <option value="FAC-04">Udumalaipettai Government Hospital</option>
+              <option value="FAC-06">Coimbatore Medical College Hospital</option>
+              <option value="ALL">All Coordinated Facilities</option>
+            </select>
             <button class="btn btn-outline" onclick="app.verifyCurrentFacilityService()">
               <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"/><polyline points="22 4 12 14.01 9 11.01"/></svg>
-              Verify Service Availability (48h)
+              Verify Availability (48h)
             </button>
           </div>
         </div>
 
-        <h3 style="font-size: 18px; font-weight: 700; margin-bottom: 14px;">Incoming Patient Journey Requests</h3>
+        <h3 style="font-size: 18px; font-weight: 700; margin-bottom: 14px;">Incoming Patient Journey & Doctor Appointment Requests</h3>
         <div style="overflow-x: auto;">
           <table class="responsive-table">
             <thead>
               <tr>
-                <th>Journey ID</th>
-                <th>Patient</th>
-                <th>Village</th>
-                <th>Requested Service</th>
-                <th>Visit Date</th>
-                <th>Status</th>
-                <th>Actions</th>
+                <th>Journey & Patient ID</th>
+                <th>Patient Details</th>
+                <th>Village / Location</th>
+                <th>Symptoms & Health Need</th>
+                <th>Clinical Urgency</th>
+                <th>Requested Date & Slot</th>
+                <th>Appointment Status</th>
+                <th>Doctor Actions</th>
               </tr>
             </thead>
             <tbody id="staff-requests-tbody">
-              <!-- Populated dynamically -->
+              <!-- Populated dynamically with all 8 columns -->
             </tbody>
           </table>
         </div>

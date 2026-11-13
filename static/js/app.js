@@ -40,6 +40,9 @@ class RuralCareApp {
     // 2. Load directory metadata (villages, services, facilities)
     await this.loadInitialMetadata();
 
+    // 2.5 Restore authenticated user and patient session
+    await this.restoreSessions();
+
     // 3. Setup event listeners & kiosk idle monitor
     this.setupEventListeners();
     this.setupKioskIdleMonitor();
@@ -51,6 +54,45 @@ class RuralCareApp {
     } else {
       this.showView("method-select");
     }
+  }
+
+  async restoreSessions() {
+    try {
+      // 1. Check authenticated staff / driver / admin user
+      const authRes = await fetch("/api/auth/me");
+      const authData = await authRes.json();
+      if (authData.success && authData.authenticated && authData.user) {
+        this.currentUser = authData.user;
+        this.activeRole = authData.user.role;
+        if (authData.user.facility_id) {
+          this.activeFacilityId = authData.user.facility_id;
+          const facSelect = document.getElementById("staff-facility-select");
+          if (facSelect) facSelect.value = authData.user.facility_id;
+        }
+        if (authData.user.role === "driver" && authData.user.id) {
+          this.activeDriverId = authData.user.id;
+        }
+      }
+
+      // 2. Check authenticated patient session
+      const patRes = await fetch("/api/patients/me");
+      const patData = await patRes.json();
+      if (patData.success && patData.patient) {
+        this.activePatient = patData.patient;
+        this.activePatientPhone = patData.patient.contact_number;
+        if (patData.active_journey) {
+          this.activeJourneyId = patData.active_journey.id;
+        }
+        this.updateCitizenSessionBanner(this.activePatient, patData.active_journey);
+      }
+    } catch (e) {
+      console.warn("[App] Session restoration note:", e);
+    }
+  }
+
+  changeStaffFacility(facilityId) {
+    this.activeFacilityId = facilityId;
+    this.loadStaffRequests();
   }
 
   setupEventListeners() {
@@ -404,14 +446,17 @@ class RuralCareApp {
   }
 
   async switchRolePersona(roleKey) {
-    this.activeRole = roleKey;
     this.closeRoleModal();
 
     if (roleKey === "citizen") {
+      this.activeRole = "citizen";
       await fetch("/api/auth/logout", { method: "POST" });
       this.showView("method-select");
     } else if (roleKey === "facility_pollachi") {
+      this.activeRole = "facility_staff";
       this.activeFacilityId = "FAC-01";
+      const facSelect = document.getElementById("staff-facility-select");
+      if (facSelect) facSelect.value = "FAC-01";
       await fetch("/api/auth/login", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
@@ -419,6 +464,7 @@ class RuralCareApp {
       });
       this.showView("facility-portal");
     } else if (roleKey === "driver_murugan") {
+      this.activeRole = "driver";
       this.activeDriverId = "DRV-01";
       await fetch("/api/auth/login", {
         method: "POST",
@@ -427,6 +473,7 @@ class RuralCareApp {
       });
       this.showView("driver-portal");
     } else if (roleKey === "admin") {
+      this.activeRole = "admin";
       await fetch("/api/auth/login", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
@@ -661,6 +708,16 @@ class RuralCareApp {
       dateInput.value = today;
       dateInput.min = today;
     }
+    if (this.activePatient) {
+      const nameEl = document.getElementById("touch-patient-name");
+      const ageEl = document.getElementById("touch-patient-age");
+      const phoneEl = document.getElementById("touch-patient-phone");
+      const villageEl = document.getElementById("touch-patient-village");
+      if (nameEl && !nameEl.value) nameEl.value = this.activePatient.name || "";
+      if (ageEl && !ageEl.value) ageEl.value = this.activePatient.age || "";
+      if (phoneEl && !phoneEl.value) phoneEl.value = this.activePatient.contact_number || "";
+      if (villageEl && !villageEl.value) villageEl.value = this.activePatient.village || "";
+    }
   }
 
   updateWizardUI() {
@@ -859,14 +916,18 @@ class RuralCareApp {
     const serviceId = document.getElementById("touch-service-select")?.value;
     const serviceObj = this.services.find(s => s.id === serviceId);
     const phoneVal = document.getElementById("touch-patient-phone")?.value.trim();
+    const symptomsVal = document.getElementById("touch-patient-symptoms")?.value.trim() || "";
 
     const payload = {
+      patient_id: (this.activePatient && this.activePatient.id) ? this.activePatient.id : null,
       patient_name: document.getElementById("touch-patient-name")?.value.trim(),
       age: parseInt(document.getElementById("touch-patient-age")?.value),
       contact_number: phoneVal,
       village: document.getElementById("touch-patient-village")?.value,
       preferred_service_id: serviceId,
       preferred_service_name: serviceObj ? serviceObj.name : "General Medicine",
+      patient_reported_symptoms: symptomsVal || (serviceObj ? serviceObj.name : "General Medicine"),
+      symptoms: symptomsVal || (serviceObj ? serviceObj.name : "General Medicine"),
       preferred_date: document.getElementById("touch-preferred-date")?.value,
       facility_id: this.selectedFacility ? this.selectedFacility.id : "FAC-01",
       facility_name: this.selectedFacility ? this.selectedFacility.name : "Pollachi GH",
@@ -925,56 +986,72 @@ class RuralCareApp {
   }
 
   async submitVoiceRegistration() {
-    const name = document.getElementById("voice-review-patient_name")?.value.trim();
-    const age = document.getElementById("voice-review-age")?.value.trim();
-    const phone = document.getElementById("voice-review-contact_number")?.value.trim();
-    const village = document.getElementById("voice-review-village")?.value.trim() || "Chettipalayam";
+    const name = document.getElementById("voice-review-patient_name")?.value.trim() || (this.activePatient ? this.activePatient.name : "");
+    const age = parseInt(document.getElementById("voice-review-age")?.value.trim()) || (this.activePatient ? this.activePatient.age : 45);
+    const phone = document.getElementById("voice-review-contact_number")?.value.trim() || (this.activePatient ? this.activePatient.contact_number : "");
+    const village = document.getElementById("voice-review-village")?.value.trim() || (this.activePatient ? this.activePatient.village : "Chettipalayam");
+    const symptoms = document.getElementById("voice-review-symptoms")?.value.trim() || document.getElementById("voice-review-service_query")?.value.trim() || "General Medical Consultation";
+    const facilityNameInput = document.getElementById("voice-review-facility")?.value.trim() || "Pollachi Government Taluk Hospital";
+    const preferredDate = document.getElementById("voice-review-date")?.value || new Date().toISOString().split("T")[0];
     const transportNeeded = document.getElementById("voice-review-transport_required")?.checked;
+    const readyTime = document.getElementById("voice-review-pickup-time")?.value.trim() || "09:30 AM";
+    const pickupLandmark = `RuralCare Self-Service Centre (${village})`;
 
     if (!name || !phone || !/^\d{10}$/.test(phone)) {
       alert("Please ensure a valid Patient Name and 10-digit Contact Phone are provided.");
       return;
     }
 
-    const serviceQuery = (document.getElementById("voice-review-service_query")?.value || "").trim().toLowerCase();
     let srvId = "SRV-GEN";
     let srvName = "General Medicine";
     let facId = "FAC-01";
     let facName = "Pollachi Government Taluk Hospital";
 
-    if (serviceQuery.includes("eye") || serviceQuery.includes("கண்")) {
+    const sLower = symptoms.toLowerCase();
+    const fLower = facilityNameInput.toLowerCase();
+
+    if (sLower.includes("eye") || sLower.includes("கண்") || fLower.includes("coimbatore") || fLower.includes("cmch")) {
       srvId = "SRV-EYE";
       srvName = "Eye Care / Ophthalmology";
       facId = "FAC-06";
       facName = "Coimbatore Medical College Hospital";
-    } else if (serviceQuery.includes("dial") || serviceQuery.includes("டையா")) {
+    } else if (sLower.includes("dial") || sLower.includes("டையா") || fLower.includes("udumalaipettai")) {
       srvId = "SRV-DIA";
       srvName = "Dialysis & Nephrology";
       facId = "FAC-04";
       facName = "Udumalaipettai Government Hospital";
-    } else if (serviceQuery.includes("mater") || serviceQuery.includes("தாய்") || serviceQuery.includes("ante") || serviceQuery.includes("கர்ப்ப")) {
+    } else if (sLower.includes("mater") || sLower.includes("தாய்") || sLower.includes("ante") || sLower.includes("கர்ப்ப") || fLower.includes("negamam")) {
       srvId = "SRV-ANC";
       srvName = "Antenatal & Maternity Care";
       facId = "FAC-02";
       facName = "Negamam Upgraded Primary Health Centre";
+    } else if (fLower.includes("pollachi")) {
+      srvId = "SRV-GEN";
+      srvName = "General Medicine";
+      facId = "FAC-01";
+      facName = "Pollachi Government Taluk Hospital";
     }
 
     const payload = {
+      patient_id: (this.activePatient && this.activePatient.id) ? this.activePatient.id : null,
       patient_name: name,
-      age: parseInt(age) || 50,
+      age: age,
       contact_number: phone,
       village: village,
       preferred_service_id: srvId,
       preferred_service_name: srvName,
-      patient_reported_symptoms: serviceQuery || srvName,
-      preferred_date: new Date().toISOString().split("T")[0],
+      patient_reported_symptoms: symptoms,
+      symptoms: symptoms,
+      preferred_date: preferredDate,
       facility_id: facId,
       facility_name: facName,
       registration_method: "SELF_SERVICE",
       registration_channel: "VOICE_ASSISTED",
       transport_required: !!transportNeeded,
-      pickup_choice: "HOME_ADDRESS",
-      pickup_landmark: `${village} Home / Center`,
+      pickup_choice: "RURALCARE_CENTRE",
+      pickup_landmark: pickupLandmark,
+      requested_pickup_time: readyTime,
+      pickup_time: readyTime,
       consent_given: true,
       client_uuid: "voice_" + Date.now() + "_" + Math.random().toString(36).substring(2, 8)
     };
@@ -2027,13 +2104,13 @@ class RuralCareApp {
           </td>
           <td>${j.village}</td>
           <td>
-            <div style="font-weight: 700; color: #0F172A;">${j.preferred_service_name}</div>
-            <div style="font-size: 11px; color: #475569;"><em>Need: ${j.patient_reported_symptoms || '-'}</em></div>
+            <div style="font-weight: 700; color: #0F172A;">${j.symptoms || j.preferred_service_name || 'General Consultation'}</div>
+            <div style="font-size: 11px; color: #475569;"><em>Need: ${j.patient_reported_symptoms || j.symptoms || j.preferred_service_name || '-'}</em></div>
           </td>
           <td>${urgencyBadge}</td>
           <td>
-            <div style="font-weight: 600;">${j.appointment_slot || 'Pending'}</div>
-            <div style="font-size: 11px; color: #64748B;">${j.preferred_date}</div>
+            <div style="font-weight: 600;">${j.appointment_slot || (j.requested_pickup_time ? 'Requested: ' + j.requested_pickup_time : 'Pending Slot')}</div>
+            <div style="font-size: 11px; color: #64748B;">📅 ${j.preferred_date || '-'}</div>
           </td>
           <td><span class="status-pill ${j.status === 'COORDINATION_CONFIRMED' || j.status === 'APPOINTMENT_ACCEPTED' ? 'confirmed' : 'pending'}">${j.status}</span></td>
           <td>
@@ -2069,11 +2146,12 @@ class RuralCareApp {
       const j = data.journey;
       document.getElementById("doc-review-jid").textContent = j.id;
       document.getElementById("doc-review-pid").textContent = j.patient_id || "PID-CITIZEN";
-      document.getElementById("doc-review-pname").textContent = `${j.patient_name} (${j.age} yrs)`;
-      document.getElementById("doc-review-phone").textContent = j.contact_number.startsWith("XXXX") ? j.contact_number : ("XXXXXX" + j.contact_number.slice(-4));
-      document.getElementById("doc-review-village").textContent = j.village;
-      document.getElementById("doc-review-date").textContent = j.preferred_date;
-      document.getElementById("doc-review-symptoms").textContent = j.patient_reported_symptoms || j.preferred_service_name || "Outpatient Consultation";
+      document.getElementById("doc-review-pname").textContent = `${j.patient_name || 'Registered Patient'} (${j.age || 45} yrs)`;
+      const rawPhone = String(j.contact_number || "");
+      document.getElementById("doc-review-phone").textContent = rawPhone.startsWith("XXXX") ? rawPhone : (rawPhone.length >= 4 ? ("XXXXXX" + rawPhone.slice(-4)) : "XXXXXXXXXX");
+      document.getElementById("doc-review-village").textContent = j.village || "Chettipalayam";
+      document.getElementById("doc-review-date").textContent = j.preferred_date || "-";
+      document.getElementById("doc-review-symptoms").textContent = j.patient_reported_symptoms || j.symptoms || j.preferred_service_name || "General Health Consultation";
 
       if (j.appointment_slot) {
         document.getElementById("doc-slot-select").value = j.appointment_slot;
@@ -2794,7 +2872,9 @@ class RuralCareApp {
             <div><strong>Pickup Point:</strong> ${req.pickup_landmark || req.pickup_village}</div>
             <div><strong>Destination:</strong> ${req.destination_facility_name}</div>
             <div><strong>Patient Contact:</strong> <span style="color: var(--text-muted);">${req.patient_phone}</span></div>
-            <div><strong>Disclosed Fare:</strong> ${req.fare_amount ? `₹${req.fare_amount} (${req.patient_fare_accepted ? 'Accepted by patient' : 'Awaiting patient acceptance'})` : 'Fare not yet quoted'}</div>
+            <div><strong>Ready / Pickup Time:</strong> <span style="color: var(--primary-teal-dark); font-weight: 700;">${req.requested_pickup_time || req.pickup_time || '09:00 AM'}</span></div>
+            <div><strong>Scheduled Date:</strong> 📅 ${req.scheduled_date || '-'}</div>
+            <div><strong>Disclosed Fare:</strong> ${req.fare_amount ? `₹${req.fare_amount} (${req.patient_fare_accepted ? '✓ Accepted by patient' : '⏳ Awaiting patient acceptance'})` : 'Fare not yet quoted'}</div>
           </div>
 
           <div style="display: flex; gap: 10px; flex-wrap: wrap;">

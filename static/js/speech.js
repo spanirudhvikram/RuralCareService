@@ -262,120 +262,102 @@ class VoiceAssistant {
       transport_required: false
     };
 
-    // Human-friendly natural questions across language modes
+    // Human-friendly natural questions across language modes (Matching Kiosk Workflow)
     this.questions = {
       ta: [
         {
-          id: "patient_name",
-          spoken: "நோயாளியின் பெயர் என்ன?",
-          display: "நோயாளியின் பெயரை தெளிவாகக் கூறவும்.",
-          prompt_en: "What is the patient's name?"
+          id: "identity",
+          spoken: "வணக்கம்! நோயாளியின் முழுப் பெயர் மற்றும் 10 இலக்க தொலைபேசி எண் என்ன?",
+          display: "நோயாளியின் பெயர் மற்றும் 10 இலக்க மொபைல் எண்ணைக் கூறவும்.",
+          prompt_en: "What is the patient's full name and 10-digit mobile number?"
         },
         {
-          id: "age",
-          spoken: "நோயாளியின் வயது எத்தனை ஆண்டுகள்?",
-          display: "நோயாளியின் வயதைக் கூறவும் (எ.கா: அறுபது, 65).",
-          prompt_en: "What is the patient's age in years?"
+          id: "symptoms",
+          spoken: "உங்களுக்கு என்ன உடல்நலக்குறைவு அல்லது அறிகுறிகள் உள்ளன? என்ன மருத்துவ உதவி தேவை?",
+          display: "உடல்நலக் குறைவு அல்லது அறிகுறிகளைக் கூறவும் (எ.கா: காய்ச்சல், தலைவலி, கண் பரிசோதனை).",
+          prompt_en: "What symptoms or health concerns are you experiencing?"
         },
         {
-          id: "contact_number",
-          spoken: "உங்கள் 10 இலக்க மொபைல் எண்ணை மெதுவாகக் கூறவும்.",
-          display: "10 இலக்க தொலைபேசி எண்ணைக் கூறவும்.",
-          prompt_en: "What is your 10-digit mobile number?"
+          id: "facility",
+          spoken: "நீங்கள் எந்த மருத்துவமனைக்கு செல்ல விரும்புகிறீர்கள் மற்றும் எந்த தேதி?",
+          display: "விருப்பமான மருத்துவமனை மற்றும் தேதியைக் கூறவும் (எ.கா: பொள்ளாச்சி அரசு மருத்துவமனை).",
+          prompt_en: "Which healthcare facility do you prefer to visit and on which date?"
         },
         {
-          id: "village",
-          spoken: "உங்கள் கிராமம் அல்லது இருப்பிடம் எது?",
-          display: "உங்கள் கிராமத்தின் பெயரைக் கூறவும் (எ.கா: செட்டிபாளையம், ஓமலூர், மேலூர்).",
-          prompt_en: "Which village do you live in?"
+          id: "transport",
+          spoken: "மருத்துவமனை செல்ல வாகன உதவி தேவையா? எந்த நேரத்தில் நீங்கள் தயாராக இருப்பீர்கள்? உங்கள் பிக்கப் இடம் ஊரக மருத்துவ சேவை மையம் என்று தானாக நிர்ணயிக்கப்படும்.",
+          display: "வாகன உதவி தேவையா? தயாராகும் நேரத்தைக் கூறவும் (எ.கா: ஆம், காலை 9:30). பிக்கப் இடம்: ஊரக மருத்துவ சேவை மையம்.",
+          prompt_en: "Do you need transport assistance? What time will you be ready? (Pickup point: RuralCare Centre)."
         },
         {
-          id: "service_query",
-          spoken: "உங்களுக்கு என்ன மருத்துவ சிகிச்சை அல்லது ஆலோசனை தேவை? பொது மருத்துவம், கண் சிகிச்சை, தாய் சேய் நலம் அல்லது டையாலிசிஸ்?",
-          display: "தேவையான மருத்துவ சேவையைக் கூறவும்.",
-          prompt_en: "What healthcare service is needed?"
-        },
-        {
-          id: "transport_required",
-          spoken: "மருத்துவமனைக்கு செல்ல வாகன உதவி தேவையா? ஆம் அல்லது இல்லை என்று கூறவும்.",
-          display: "வாகன உதவி தேவையா? 'ஆம்' அல்லது 'இல்லை' என்று கூறவும்.",
-          prompt_en: "Do you need transport assistance? Say yes or no."
+          id: "summary",
+          spoken: "உங்கள் பயண விவரங்களை உறுதிப்படுத்தவும். பதிவு செய்ய 'உறுதி' என்று கூறவும் அல்லது Confirm அழுத்தவும்.",
+          display: "விவரங்களைச் சரிபார்க்கவும். உறுதி செய்ய 'உறுதி' / CONFIRM என்று கூறவும்.",
+          prompt_en: "Please review summary. Say 'Confirm' or click Register."
         }
       ],
       en: [
         {
-          id: "patient_name",
-          spoken: "What is the patient's full name?",
-          display: "Please speak the patient's full name clearly.",
-          prompt_en: "What is the patient's full name?"
+          id: "identity",
+          spoken: "Hello! What is the patient's full name and 10-digit mobile number?",
+          display: "Please state the patient's full name and 10-digit mobile number.",
+          prompt_en: "What is the patient's full name and 10-digit mobile number?"
         },
         {
-          id: "age",
-          spoken: "What is the patient's age in years?",
-          display: "Please speak the patient's age (e.g. 60, sixty).",
-          prompt_en: "What is the patient's age in years?"
+          id: "symptoms",
+          spoken: "What symptoms or health concerns are you experiencing? What medical care do you need?",
+          display: "Please describe your symptoms or medical concerns (e.g. fever, headache, eye checkup).",
+          prompt_en: "What symptoms or health concerns are you experiencing?"
         },
         {
-          id: "contact_number",
-          spoken: "What is your 10 digit mobile phone number?",
-          display: "Please speak your 10-digit contact number slowly.",
-          prompt_en: "What is your 10-digit mobile number?"
+          id: "facility",
+          spoken: "Which healthcare facility do you prefer to visit and on which date?",
+          display: "Please state your preferred hospital and visit date (e.g. Pollachi Taluk Hospital).",
+          prompt_en: "Which hospital do you prefer to visit and on which date?"
         },
         {
-          id: "village",
-          spoken: "Which village or panchayat do you live in?",
-          display: "Please speak your village name (e.g., Chettipalayam, Omalur, Melur).",
-          prompt_en: "Which village do you live in?"
+          id: "transport",
+          spoken: "Do you need transport assistance? What time will you be ready for pickup? Your pickup location is auto-assigned to RuralCare Centre Chettipalayam.",
+          display: "Do you need transport? What time will you be ready? (e.g. Yes, 09:30 AM). Pickup: RuralCare Centre.",
+          prompt_en: "Do you need transport? What time ready? (Auto pickup: RuralCare Centre)."
         },
         {
-          id: "service_query",
-          spoken: "What medical service is needed? General Medicine, Eye Care, Antenatal Care, or Dialysis?",
-          display: "Please state the required healthcare service.",
-          prompt_en: "What medical service is needed?"
-        },
-        {
-          id: "transport_required",
-          spoken: "Do you need vehicle transport assistance to reach the hospital? Please say Yes or No.",
-          display: "Do you need transport? Please say 'Yes' or 'No'.",
-          prompt_en: "Do you need transport assistance? Say yes or no."
+          id: "summary",
+          spoken: "Please review your journey summary. Say 'Confirm' or click Register to book.",
+          display: "Please review summary. Say 'Confirm' or click Register to book.",
+          prompt_en: "Please confirm journey details."
         }
       ],
       mixed: [
         {
-          id: "patient_name",
-          spoken: "நோயாளியின் முழுப் பெயர் (Patient Name) என்ன?",
-          display: "நோயாளியின் பெயரை தெளிவாகக் கூறவும் (Patient Name).",
-          prompt_en: "What is the patient's name?"
+          id: "identity",
+          spoken: "வணக்கம்! Patient Name மற்றும் 10-digit Mobile Number என்ன?",
+          display: "Patient Name மற்றும் 10 இலக்க போன் நம்பர் கூறவும்.",
+          prompt_en: "What is the patient's name and mobile number?"
         },
         {
-          id: "age",
-          spoken: "நோயாளியின் வயது எத்தனை ஆண்டுகள் (Age in years)?",
-          display: "நோயாளியின் வயதைக் கூறவும் (எ.கா: 60, அறுபது).",
-          prompt_en: "What is the patient's age?"
+          id: "symptoms",
+          spoken: "உங்களுக்கு என்ன Symptoms அல்லது மருத்துவ உதவி தேவை?",
+          display: "Symptoms மற்றும் தேவையான Medical Care கூறவும்.",
+          prompt_en: "What symptoms or medical care do you need?"
         },
         {
-          id: "contact_number",
-          spoken: "உங்கள் 10 இலக்க மொபைல் போன் நம்பரை மெதுவாகக் கூறவும்.",
-          display: "10-digit contact mobile number.",
-          prompt_en: "What is your 10-digit mobile number?"
+          id: "facility",
+          spoken: "நீங்கள் எந்த Hospital செல்ல விரும்புகிறீர்கள் மற்றும் Visit Date என்ன?",
+          display: "Preferred Hospital மற்றும் Visit Date கூறவும்.",
+          prompt_en: "Which hospital and date do you prefer?"
         },
         {
-          id: "village",
-          spoken: "உங்கள் கிராமம் அல்லது Village பெயர் எது?",
-          display: "உங்கள் ஊர் / கிராமத்தின் பெயர் (Village name).",
-          prompt_en: "Which village do you live in?"
+          id: "transport",
+          spoken: "Transport உதவி தேவையா? எந்த நேரத்தில் Ready ஆக இருப்பீர்கள்? Pickup Point RuralCare Centre ஆகும்.",
+          display: "Transport needed? Ready time கூறவும் (Pickup: RuralCare Centre).",
+          prompt_en: "Do you need transport? What time will you be ready?"
         },
         {
-          id: "service_query",
-          spoken: "உங்களுக்கு என்ன Medical Service தேவை? General Medicine, Eye Care, Dialysis அல்லது Maternity?",
-          display: "தேவையான மருத்துவ சேவை (Healthcare service needed).",
-          prompt_en: "What healthcare service is needed?"
-        },
-        {
-          id: "transport_required",
-          spoken: "மருத்துவமனை செல்ல Transport அல்லது ஆட்டோ உதவி தேவையா? Yes அல்லது No என்று கூறவும்.",
-          display: "Transport needed? 'Yes' / 'ஆம்' அல்லது 'No' / 'இல்லை'.",
-          prompt_en: "Do you need transport assistance?"
+          id: "summary",
+          spoken: "விவரங்களை சரிபார்க்கவும். Confirm செய்ய 'உறுதி' அல்லது 'CONFIRM' என்று கூறவும்.",
+          display: "விவரங்களை சரிபார்க்கவும். Confirm செய்ய 'CONFIRM' என்று கூறவும்.",
+          prompt_en: "Please review summary and confirm."
         }
       ]
     };
@@ -1276,7 +1258,7 @@ class VoiceAssistant {
 
   askCurrentQuestion() {
     const list = this.getCurrentQuestionList();
-    if (this.currentStepIndex >= list.length) {
+    if (this.currentStepIndex >= list.length - 1) {
       this.finishVoiceWorkflow();
       return;
     }
@@ -1288,7 +1270,16 @@ class VoiceAssistant {
 
     if (questionTextEl) questionTextEl.textContent = q.spoken;
     if (subTextEl) subTextEl.textContent = q.display;
-    if (stepBadge) stepBadge.textContent = `${this.currentStepIndex + 1} / ${list.length}`;
+    if (stepBadge) stepBadge.textContent = `${this.currentStepIndex + 1} / ${list.length - 1}`;
+
+    const nextBtn = document.getElementById("btn-voice-next");
+    if (nextBtn) {
+      nextBtn.classList.remove("highlight-pulse");
+      const nextLabel = this.languageMode === "ta" ? "அடுத்து / NEXT →" : "NEXT →";
+      const lbl = document.getElementById("voice-next-btn-text");
+      if (lbl) lbl.textContent = nextLabel;
+      nextBtn.onclick = () => this.advanceToNextStep();
+    }
 
     this.setMicrophoneState("READY");
     this.showInterimFeedback("", false);
@@ -1296,6 +1287,19 @@ class VoiceAssistant {
     this.speakText(q.spoken, () => {
       this.listen();
     });
+  }
+
+  advanceToNextStep() {
+    this.stopSpeech();
+    this.stopListening();
+    const list = this.getCurrentQuestionList();
+
+    if (this.currentStepIndex < list.length - 2) {
+      this.currentStepIndex++;
+      this.askCurrentQuestion();
+    } else {
+      this.finishVoiceWorkflow();
+    }
   }
 
   repeatQuestion() {
@@ -1314,18 +1318,117 @@ class VoiceAssistant {
       const list = this.getCurrentQuestionList();
       const currentQ = list[this.currentStepIndex];
       if (currentQ) {
-        const input = document.getElementById(`voice-review-${currentQ.id}`);
-        if (input) {
-          if (input.type === "checkbox") input.checked = false;
-          else input.value = "";
+        if (currentQ.id === "identity") {
+          this.extractedData.patient_name = "";
+          this.extractedData.contact_number = "";
+          const n = document.getElementById("voice-review-patient_name");
+          const p = document.getElementById("voice-review-contact_number");
+          if (n) n.value = "";
+          if (p) p.value = "";
+        } else if (currentQ.id === "symptoms") {
+          this.extractedData.symptoms = "";
+          this.extractedData.service_query = "";
+          const s = document.getElementById("voice-review-symptoms");
+          if (s) s.value = "";
+        } else if (currentQ.id === "transport") {
+          this.extractedData.pickup_time = "";
+          const t = document.getElementById("voice-review-pickup-time");
+          if (t) t.value = "";
         }
-        this.extractedData[currentQ.id] = "";
       }
       this.showInterimFeedback("", false);
       this.askCurrentQuestion();
     } else {
       this.setVoiceFlow(this.voiceFlow);
     }
+  }
+
+  captureAnswerForCurrentQuestion(questionId, rawSpeech) {
+    const clean = rawSpeech.trim();
+    const isTamil = this.languageMode === "ta";
+    let ackMessage = "";
+
+    if (questionId === "identity") {
+      const digits = clean.replace(/\D/g, "");
+      let phone = digits.length >= 10 ? digits.slice(-10) : (this.extractedData.contact_number || (window.app && window.app.activePatient ? window.app.activePatient.contact_number : "9842100001"));
+      
+      let name = clean.replace(/என்\s*பெயர்\s*(?:ஆகும்|இருக்கு)?/gi, "")
+                      .replace(/my\s*name\s*is/gi, "")
+                      .replace(/பெயர்/gi, "")
+                      .replace(/\d+/g, "")
+                      .replace(/[.,:;]/g, "")
+                      .trim();
+      if (!name || name.length < 2) {
+        name = this.extractedData.patient_name || (window.app && window.app.activePatient ? window.app.activePatient.name : "ராமசாமி கவுண்டர்");
+      }
+
+      this.extractedData.patient_name = name;
+      this.extractedData.contact_number = phone;
+
+      const nameEl = document.getElementById("voice-review-patient_name");
+      const phoneEl = document.getElementById("voice-review-contact_number");
+      if (nameEl) nameEl.value = name;
+      if (phoneEl) phoneEl.value = phone;
+
+      ackMessage = isTamil
+        ? `பெயர்: ${name}, தொடர்பு எண்: ${phone} பெறப்பட்டது. அடுத்த கேள்விக்கு செல்ல 'அடுத்து' என்று கூறவும் அல்லது NEXT அழுத்தவும்.`
+        : `Captured name: ${name}, phone: ${phone}. Say 'NEXT' or click Next to continue.`;
+    } else if (questionId === "symptoms") {
+      this.extractedData.symptoms = clean;
+      this.extractedData.service_query = clean;
+      const symEl = document.getElementById("voice-review-symptoms");
+      const srvEl = document.getElementById("voice-review-service_query");
+      if (symEl) symEl.value = clean;
+      if (srvEl) srvEl.value = clean;
+
+      ackMessage = isTamil
+        ? `அறிகுறிகள் பதிவு செய்யப்பட்டுள்ளது. அடுத்த கேள்விக்கு செல்ல 'அடுத்து' என்று கூறவும்.`
+        : `Symptoms captured. Say 'NEXT' or click Next to continue.`;
+    } else if (questionId === "facility") {
+      let fac = "Pollachi Government Taluk Hospital";
+      const lower = clean.toLowerCase();
+      if (lower.includes("coimbatore") || lower.includes("cmch") || lower.includes("கோவை")) {
+        fac = "Coimbatore Medical College Hospital";
+      } else if (lower.includes("negamam") || lower.includes("நெகமம்")) {
+        fac = "Negamam Upgraded Primary Health Centre";
+      } else if (lower.includes("udumalaipettai") || lower.includes("உடுமலை")) {
+        fac = "Udumalaipettai Government Hospital";
+      }
+      this.extractedData.facility = fac;
+      const facEl = document.getElementById("voice-review-facility");
+      if (facEl) facEl.value = fac;
+
+      ackMessage = isTamil
+        ? `மருத்துவமனை ${fac} தேர்வு செய்யப்பட்டது. அடுத்த கேள்விக்கு செல்ல 'அடுத்து' என்று கூறவும்.`
+        : `Selected ${fac}. Say 'NEXT' or click Next to continue.`;
+    } else if (questionId === "transport") {
+      const lower = clean.toLowerCase();
+      const needsTransport = !(lower.includes("இல்லை") || lower.includes("வேண்டாம்") || lower.includes("no") || lower.includes("not"));
+      this.extractedData.transport_required = needsTransport;
+
+      let readyTime = "09:30 AM";
+      const timeMatch = clean.match(/(\d{1,2}(?::\d{2})?\s*(?:am|pm|காலை|மாலை)?)/i);
+      if (timeMatch) readyTime = timeMatch[0].trim();
+
+      this.extractedData.pickup_time = readyTime;
+      const transEl = document.getElementById("voice-review-transport_required");
+      const timeEl = document.getElementById("voice-review-pickup-time");
+      if (transEl) transEl.checked = needsTransport;
+      if (timeEl) timeEl.value = readyTime;
+
+      ackMessage = isTamil
+        ? `பிக்கப் நேரம்: ${readyTime}. பிக்கப் இடம்: ஊரக மருத்துவ சேவை மையம். சுருக்கத்தை சரிபார்க்க 'அடுத்து' என்று கூறவும்.`
+        : `Pickup time: ${readyTime} at RuralCare Centre. Say 'NEXT' or click Next to view summary.`;
+    }
+
+    const nextBtn = document.getElementById("btn-voice-next");
+    if (nextBtn) {
+      nextBtn.classList.add("highlight-pulse");
+    }
+
+    this.speakText(ackMessage, () => {
+      this.listen();
+    });
   }
 
   async listen() {
@@ -1546,14 +1649,26 @@ class VoiceAssistant {
     }
 
     // Universal Spoken Repeat Control
-    if (lower.includes("மீண்டும் சொல்") || lower.includes("repeat") || lower.includes("மறுபடி")) {
-      this.repeatSpeech();
+    if (lower.includes("மீண்டும் சொல்") || lower.includes("repeat") || lower.includes("மறுபடி") || lower.includes("திரும்ப சொல்")) {
+      this.repeatQuestion();
+      return;
+    }
+
+    // Universal Spoken Change / Retry Control
+    if (lower.includes("மாற்று") || lower.includes("திருத்து") || lower.includes("change") || lower.includes("retry")) {
+      this.retryQuestion();
+      return;
+    }
+
+    // Universal Spoken Next Navigation Control
+    if (lower.includes("அடுத்து") || lower.includes("அடுத்தது") || lower.includes("next") || lower.includes("continue") || lower.includes("போகலாம்")) {
+      this.advanceToNextStep();
       return;
     }
 
     // Handle Final Pre-Submission Confirmation
-    if (this.isAwaitingFinalConfirmation) {
-      const confirmWords = ["ஆம்", "சரி", "ஆமா", "yes", "confirm", "பதிவு செய்", "உறுதி", "correct"];
+    if (this.isAwaitingFinalConfirmation || this.currentStepIndex >= 4) {
+      const confirmWords = ["ஆம்", "சரி", "ஆமா", "yes", "confirm", "பதிவு செய்", "உறுதி", "correct", "book"];
       let confirmed = false;
       for (const w of confirmWords) {
         if (lower.includes(w)) { confirmed = true; break; }
@@ -1566,8 +1681,8 @@ class VoiceAssistant {
         }
       } else {
         const recheckPrompt = this.languageMode === "ta"
-          ? "தயவுசெய்து திரையில் உள்ள விவரங்களைச் சரிபார்க்கவும். உறுதி செய்ய 'ஆம்' அல்லது 'சரி' என்று கூறவும்."
-          : "Please check the details on screen. Say 'Yes' or click Confirm to proceed.";
+          ? "தயவுசெய்து திரையில் உள்ள விவரங்களைச் சரிபார்க்கவும். உறுதி செய்ய 'உறுதி' என்று கூறவும் அல்லது 'மாற்று' என்று கூறவும்."
+          : "Please check the details on screen. Say 'Confirm' or click Register to proceed.";
         this.speakText(recheckPrompt, () => this.listen());
       }
       return;
@@ -1579,17 +1694,14 @@ class VoiceAssistant {
     if (this.voiceFlow === "menu") {
       if (lower.includes("மருத்துவமனை") || lower.includes("தேட") || lower.includes("hospital") || lower.includes("find") || lower.includes("clinic")) {
         this.setVoiceFlow("discovery");
-      } else if (lower.includes("பதிவு") || lower.includes("அப்பாயின்ட்மென்ட்") || lower.includes("book") || lower.includes("appointment") || lower.includes("new")) {
+      } else if (lower.includes("பதிவு") || lower.includes("அப்பாயின்ட்மென்ட்") || lower.includes("book") || lower.includes("appointment") || lower.includes("new") || lower.includes("start")) {
         this.setVoiceFlow("booking");
       } else if (lower.includes("பயண நிலை") || lower.includes("டிராக்") || lower.includes("நிலை") || lower.includes("track") || lower.includes("status")) {
         this.setVoiceFlow("tracking");
       } else if (lower.includes("வாகனம்") || lower.includes("ஆட்டோ") || lower.includes("transport") || lower.includes("ride")) {
         this.setVoiceFlow("transport");
       } else {
-        const retryMenu = this.languageMode === "ta"
-          ? "மருத்துவமனை தேட, பதிவு செய்ய, அல்லது பயண நிலையை அறிய என்று கூறவும்."
-          : "Please say: 'Find Hospital', 'Book Appointment', or 'Track Journey'.";
-        this.speakText(retryMenu, () => this.listen());
+        this.setVoiceFlow("booking");
       }
       return;
     }
@@ -1641,18 +1753,7 @@ class VoiceAssistant {
       const currentQ = list[this.currentStepIndex];
       if (!currentQ) return;
 
-      const parsedVal = this.parseAnswer(currentQ.id, clean);
-      this.extractedData[currentQ.id] = parsedVal;
-      this.updateLiveField(currentQ.id, parsedVal, clean);
-
-      this.currentStepIndex++;
-      if (this.currentStepIndex < list.length) {
-        setTimeout(() => {
-          this.askCurrentQuestion();
-        }, 600);
-      } else {
-        this.finishVoiceWorkflow();
-      }
+      this.captureAnswerForCurrentQuestion(currentQ.id, clean);
     }
   }
 
@@ -1862,14 +1963,42 @@ class VoiceAssistant {
   finishVoiceWorkflow() {
     this.setMicrophoneState("TRANSCRIPTION READY");
     this.isAwaitingFinalConfirmation = true;
+    this.currentStepIndex = 4; // summary step
 
     const isTamil = this.languageMode === "ta";
-    const name = this.extractedData.patient_name || document.getElementById("voice-review-patient_name")?.value || "";
-    const age = this.extractedData.age || document.getElementById("voice-review-age")?.value || "";
-    const service = this.extractedData.service_query || document.getElementById("voice-review-service_query")?.value || "General Medicine";
-    const transport = (this.extractedData.transport_required || document.getElementById("voice-review-transport_required")?.checked)
-      ? (isTamil ? "தேவை (Yes)" : "Requested")
-      : (isTamil ? "தேவையில்லை (No)" : "Not required");
+    const name = this.extractedData.patient_name || document.getElementById("voice-review-patient_name")?.value || (window.app && window.app.activePatient ? window.app.activePatient.name : "நோயாளி");
+    const phone = this.extractedData.contact_number || document.getElementById("voice-review-contact_number")?.value || "9842100001";
+    const symptoms = this.extractedData.symptoms || document.getElementById("voice-review-symptoms")?.value || "பொது மருத்துவ ஆலோசனை";
+    const facility = this.extractedData.facility || document.getElementById("voice-review-facility")?.value || "பொள்ளாச்சி அரசு மருத்துவமனை";
+    const transport = (this.extractedData.transport_required !== undefined) ? this.extractedData.transport_required : document.getElementById("voice-review-transport_required")?.checked;
+    const readyTime = this.extractedData.pickup_time || document.getElementById("voice-review-pickup-time")?.value || "09:30 AM";
+    const pickupLandmark = document.getElementById("voice-review-pickup-landmark")?.value || "RuralCare Self-Service Centre (Chettipalayam)";
+
+    const promptTextEl = document.getElementById("voice-prompt-text");
+    const subTextEl = document.getElementById("voice-prompt-subtext");
+    const stepBadge = document.getElementById("voice-step-badge");
+
+    if (promptTextEl) {
+      promptTextEl.textContent = isTamil
+        ? "விவரங்களை சரிபார்க்கவும். உறுதி செய்ய 'உறுதி' என்று கூறவும்."
+        : "Please review summary. Say 'Confirm' or click Register.";
+    }
+    if (subTextEl) {
+      subTextEl.textContent = isTamil
+        ? `நோயாளி: ${name} • ${phone} | அறிகுறிகள்: ${symptoms} | மருத்துவமனை: ${facility} | வாகனம்: ${transport ? 'ஆம் (' + readyTime + ' - ' + pickupLandmark + ')' : 'இல்லை'}`
+        : `Patient: ${name} • ${phone} | Symptoms: ${symptoms} | Facility: ${facility} | Transport: ${transport ? 'Yes (' + readyTime + ' at ' + pickupLandmark + ')' : 'No'}`;
+    }
+    if (stepBadge) stepBadge.textContent = isTamil ? "இறுதி சரிபார்ப்பு (Summary)" : "Final Summary";
+
+    const nextBtn = document.getElementById("btn-voice-next");
+    if (nextBtn) {
+      const nextTxt = document.getElementById("voice-next-btn-text");
+      if (nextTxt) nextTxt.textContent = isTamil ? "உறுதி செய் / CONFIRM ✓" : "CONFIRM & REGISTER ✓";
+      nextBtn.classList.add("highlight-pulse");
+      nextBtn.onclick = () => {
+        if (window.app) window.app.submitVoiceRegistration();
+      };
+    }
 
     // Show Read-Back Verification Banner
     const readbackBanner = document.getElementById("voice-readback-banner");
@@ -1877,8 +2006,8 @@ class VoiceAssistant {
     if (readbackBanner) readbackBanner.classList.remove("hidden");
     if (readbackText) {
       readbackText.textContent = isTamil
-        ? `நோயாளி: ${name}, வயது: ${age}, மருத்துவ சேவை: ${service}, வாகன உதவி: ${transport}.`
-        : `Patient: ${name}, Age: ${age}, Service: ${service}, Transport: ${transport}.`;
+        ? `நோயாளி: ${name}, தொடர்பு: ${phone}, அறிகுறிகள்: ${symptoms}, மருத்துவமனை: ${facility}, வாகனம்: ${transport ? 'ஆம் (' + readyTime + ' - ' + pickupLandmark + ')' : 'இல்லை'}.`
+        : `Patient: ${name}, Phone: ${phone}, Symptoms: ${symptoms}, Hospital: ${facility}, Transport: ${transport ? 'Yes (' + readyTime + ' at ' + pickupLandmark + ')' : 'No'}.`;
     }
 
     const reviewBox = document.getElementById("voice-final-review");
@@ -1886,8 +2015,8 @@ class VoiceAssistant {
 
     // Read back all important details aloud
     const readbackSpoken = isTamil
-      ? `உங்கள் விவரங்கள் சரிபார்க்கப்படுகின்றன: நோயாளி ${name}, வயது ${age}, சேவை ${service}, வாகன உதவி ${transport}. இந்த விவரங்கள் சரியானவையா? பதிவு செய்ய 'ஆம்' அல்லது 'சரி' என்று கூறவும்.`
-      : `Please confirm your details: Patient ${name}, Age ${age}, Service ${service}, Transport ${transport}. Are these details correct? Please say 'Yes' to register.`;
+      ? `உங்கள் பயண விவரங்கள்: நோயாளி ${name}, அறிகுறிகள் ${symptoms}, மருத்துவமனை ${facility}, பிக்கப் நேரம் ${readyTime}, பிக்கப் இடம் ஊரக மருத்துவ சேவை மையம். இந்த விவரங்கள் சரியானவையா? பதிவு செய்ய 'உறுதி' அல்லது 'CONFIRM' என்று கூறவும்.`
+      : `Please confirm your details: Patient ${name}, Symptoms ${symptoms}, Hospital ${facility}, Pickup time ${readyTime} at RuralCare Centre. Are these details correct? Please say 'Confirm' to register.`;
 
     this.speakText(readbackSpoken, () => {
       this.listen();

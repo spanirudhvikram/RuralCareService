@@ -67,6 +67,7 @@ def create_journey():
     pickup_choice = sanitize_text(payload.get("pickup_choice", "HOME_ADDRESS"))
     patient_reported_symptoms = sanitize_text(payload.get("patient_reported_symptoms") or payload.get("notes") or payload.get("symptoms") or "")
     patient_id = sanitize_text(payload.get("patient_id", ""))
+    requested_pickup_time = sanitize_text(payload.get("requested_pickup_time") or payload.get("pickup_time") or "")
 
     if patient_id and (not age or not patient_name or not contact_number or not village):
         p_doc = db.collection("patients").document(patient_id).get()
@@ -195,8 +196,10 @@ def create_journey():
         "operator_id": operator_id,
         "operator_name": operator_name,
         "transport_required": transport_required,
-        "pickup_choice": pickup_choice,
-        "pickup_landmark": pickup_landmark or ("RuralCare Self-Service Centre" if pickup_choice == "RURALCARE_CENTRE" else f"{village} Home"),
+        "pickup_choice": "RURALCARE_CENTRE" if registration_channel == "VOICE_ASSISTED" else pickup_choice,
+        "pickup_landmark": (f"RuralCare Self-Service Centre ({village})" if (registration_channel == "VOICE_ASSISTED" or pickup_choice == "RURALCARE_CENTRE") else (pickup_landmark or f"{village} Home")),
+        "requested_pickup_time": requested_pickup_time or "09:00 AM",
+        "pickup_time": requested_pickup_time or "09:00 AM",
         "status": initial_status,
         "created_at": now_utc,
         "updated_at": now_utc,
@@ -225,16 +228,20 @@ def create_journey():
     # If transport required, spawn transport request
     if transport_required:
         tr_id = f"TR-{random.randint(1000, 9999)}"
+        final_pickup_landmark = (f"RuralCare Self-Service Centre ({village})" if (registration_channel == "VOICE_ASSISTED" or pickup_choice == "RURALCARE_CENTRE") else (pickup_landmark or f"{village} Centre"))
         transport_data = {
             "id": tr_id,
             "journey_id": journey_id,
             "patient_name": patient_name,
             "patient_phone": contact_number,
             "pickup_village": village,
-            "pickup_landmark": pickup_landmark or f"{village} Centre",
+            "pickup_landmark": final_pickup_landmark,
+            "pickup_choice": "RURALCARE_CENTRE" if registration_channel == "VOICE_ASSISTED" else pickup_choice,
             "destination_facility_id": facility_id,
             "destination_facility_name": facility_name,
-            "scheduled_date": preferred_date,
+            "scheduled_date": preferred_date or datetime.now().strftime("%Y-%m-%d"),
+            "requested_pickup_time": requested_pickup_time or "09:00 AM",
+            "pickup_time": requested_pickup_time or "09:00 AM",
             "driver_id": None,
             "driver_name": None,
             "status": "REQUESTED",

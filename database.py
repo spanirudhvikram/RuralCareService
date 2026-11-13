@@ -185,15 +185,86 @@ class LocalPersistentStore:
             return [DocumentSnapshot(k, v, exists=True) for k, v in coll.items()]
 
 
+def _is_firestore_failover_err(e):
+    err = str(e).lower()
+    return any(k in err for k in [
+        "quota exceeded", "resourceexhausted", "429", "unavailable", 
+        "deadline exceeded", "service unavailable", "failed to connect"
+    ]) or "ResourceExhausted" in type(e).__name__ or "ServiceUnavailable" in type(e).__name__
+
+def switch_to_local_store(reason=""):
+    global _db_instance, _using_firebase
+    if not isinstance(_db_instance, LocalPersistentStore):
+        print(f"Warning: Firestore live failover triggered ({reason}). Switching to persistent local store fallback.")
+        _db_instance = LocalPersistentStore(Config.DB_FILE)
+        _using_firebase = False
+        seed_initial_data(_db_instance)
+        seed_radar_demo_data(_db_instance)
+        seed_recommendation_demo_data(_db_instance)
+        seed_workflow_demo_data(_db_instance)
+    return _db_instance
+
+class FirestoreDocumentWrapper:
+    """Wraps google-cloud-firestore DocumentReference with fallback handling."""
+    def __init__(self, raw_doc, collection_name):
+        self._raw_doc = raw_doc
+        self.collection_name = collection_name
+        self.id = getattr(raw_doc, "id", None)
+
+    def get(self):
+        try:
+            return self._raw_doc.get()
+        except Exception as e:
+            if _is_firestore_failover_err(e):
+                local = switch_to_local_store(str(e))
+                return local.get_document(self.collection_name, self.id)
+            raise
+
+    def set(self, data, merge=False):
+        try:
+            return self._raw_doc.set(data, merge=merge)
+        except Exception as e:
+            if _is_firestore_failover_err(e):
+                local = switch_to_local_store(str(e))
+                return local.set_document(self.collection_name, self.id, data, merge=merge)
+            raise
+
+    def update(self, updates):
+        try:
+            return self._raw_doc.update(updates)
+        except Exception as e:
+            if _is_firestore_failover_err(e):
+                local = switch_to_local_store(str(e))
+                return local.update_document(self.collection_name, self.id, updates)
+            raise
+
+    def delete(self):
+        try:
+            return self._raw_doc.delete()
+        except Exception as e:
+            if _is_firestore_failover_err(e):
+                local = switch_to_local_store(str(e))
+                return local.delete_document(self.collection_name, self.id)
+            raise
+
 class FirestoreQueryWrapper:
     """Wraps google-cloud-firestore Query to seamlessly support len(), [idx], and streaming."""
-    def __init__(self, raw_query):
+    def __init__(self, raw_query, collection_name=None):
         self._raw_query = raw_query
+        self.collection_name = collection_name
         self._cached = None
 
     def _get_list(self):
         if self._cached is None:
-            self._cached = list(self._raw_query.stream())
+            try:
+                self._cached = list(self._raw_query.stream())
+            except Exception as e:
+                if _is_firestore_failover_err(e):
+                    local = switch_to_local_store(str(e))
+                    if self.collection_name:
+                        return local.list_documents(self.collection_name)
+                    return []
+                raise
         return self._cached
 
     def __iter__(self):
@@ -217,17 +288,17 @@ class FirestoreQueryWrapper:
     def where(self, field=None, op=None, value=None, filter=None):
         from google.cloud.firestore_v1.base_query import FieldFilter
         if filter is not None:
-            return FirestoreQueryWrapper(self._raw_query.where(filter=filter))
-        return FirestoreQueryWrapper(self._raw_query.where(filter=FieldFilter(field, op, value)))
+            return FirestoreQueryWrapper(self._raw_query.where(filter=filter), self.collection_name)
+        return FirestoreQueryWrapper(self._raw_query.where(filter=FieldFilter(field, op, value)), self.collection_name)
 
     def order_by(self, *args, **kwargs):
-        return FirestoreQueryWrapper(self._raw_query.order_by(*args, **kwargs))
+        return FirestoreQueryWrapper(self._raw_query.order_by(*args, **kwargs), self.collection_name)
 
     def limit(self, count):
-        return FirestoreQueryWrapper(self._raw_query.limit(count))
+        return FirestoreQueryWrapper(self._raw_query.limit(count), self.collection_name)
 
     def select(self, *args, **kwargs):
-        return FirestoreQueryWrapper(self._raw_query.select(*args, **kwargs))
+        return FirestoreQueryWrapper(self._raw_query.select(*args, **kwargs), self.collection_name)
 
 
 class FirestoreCollectionWrapper:
@@ -240,31 +311,50 @@ class FirestoreCollectionWrapper:
         return self._raw_coll.id
 
     def document(self, doc_id=None):
-        return self._raw_coll.document(doc_id)
+        raw_doc = self._raw_coll.document(doc_id)
+        return FirestoreDocumentWrapper(raw_doc, self.id)
 
     def stream(self):
-        return self._raw_coll.stream()
+        try:
+            return self._raw_coll.stream()
+        except Exception as e:
+            if _is_firestore_failover_err(e):
+                local = switch_to_local_store(str(e))
+                return local.collection(self.id).stream()
+            raise
 
     def get(self):
-        return list(self._raw_coll.stream())
+        try:
+            return list(self._raw_coll.stream())
+        except Exception as e:
+            if _is_firestore_failover_err(e):
+                local = switch_to_local_store(str(e))
+                return local.collection(self.id).stream()
+            raise
 
     def where(self, field=None, op=None, value=None, filter=None):
         from google.cloud.firestore_v1.base_query import FieldFilter
         if filter is not None:
-            return FirestoreQueryWrapper(self._raw_coll.where(filter=filter))
-        return FirestoreQueryWrapper(self._raw_coll.where(filter=FieldFilter(field, op, value)))
+            return FirestoreQueryWrapper(self._raw_coll.where(filter=filter), self.id)
+        return FirestoreQueryWrapper(self._raw_coll.where(filter=FieldFilter(field, op, value)), self.id)
 
     def order_by(self, *args, **kwargs):
-        return FirestoreQueryWrapper(self._raw_coll.order_by(*args, **kwargs))
+        return FirestoreQueryWrapper(self._raw_coll.order_by(*args, **kwargs), self.id)
 
     def limit(self, count):
-        return FirestoreQueryWrapper(self._raw_coll.limit(count))
+        return FirestoreQueryWrapper(self._raw_coll.limit(count), self.id)
 
     def select(self, *args, **kwargs):
-        return FirestoreQueryWrapper(self._raw_coll.select(*args, **kwargs))
+        return FirestoreQueryWrapper(self._raw_coll.select(*args, **kwargs), self.id)
 
     def add(self, data):
-        return self._raw_coll.add(data)
+        try:
+            return self._raw_coll.add(data)
+        except Exception as e:
+            if _is_firestore_failover_err(e):
+                local = switch_to_local_store(str(e))
+                return local.collection(self.id).add(data)
+            raise
 
 
 class FirestoreClientWrapper:

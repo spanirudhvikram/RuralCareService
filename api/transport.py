@@ -53,6 +53,8 @@ def get_transport_requests():
             "pickup_landmark": d.get("pickup_landmark"),
             "destination_facility_name": d.get("destination_facility_name"),
             "scheduled_date": d.get("scheduled_date"),
+            "requested_pickup_time": d.get("requested_pickup_time") or d.get("pickup_time") or "09:00 AM",
+            "pickup_time": d.get("requested_pickup_time") or d.get("pickup_time") or "09:00 AM",
             "status": d.get("status"),
             "driver_id": d.get("driver_id"),
             "driver_name": d.get("driver_name"),
