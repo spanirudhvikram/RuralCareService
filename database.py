@@ -84,7 +84,22 @@ class LocalPersistentStore:
         self.file_path = Path(file_path)
         self.lock = threading.RLock()
         self.data = {}
+        self._last_mtime = 0
         self._load()
+
+    def _check_reload(self):
+        """Reload data if file has been modified on disk by another process."""
+        try:
+            if self.file_path.exists():
+                mtime = self.file_path.stat().st_mtime
+                if mtime > self._last_mtime:
+                    with open(self.file_path, "r", encoding="utf-8") as f:
+                        disk_data = json.load(f)
+                    if isinstance(disk_data, dict):
+                        self.data = disk_data
+                    self._last_mtime = mtime
+        except Exception:
+            pass
 
     def _load(self):
         with self.lock:
@@ -92,6 +107,7 @@ class LocalPersistentStore:
                 try:
                     with open(self.file_path, "r", encoding="utf-8") as f:
                         self.data = json.load(f)
+                    self._last_mtime = self.file_path.stat().st_mtime
                 except Exception:
                     self.data = {}
             else:
@@ -105,6 +121,8 @@ class LocalPersistentStore:
                 json.dump(self.data, f, indent=2, ensure_ascii=False)
             try:
                 temp_path.replace(self.file_path)
+                if self.file_path.exists():
+                    self._last_mtime = self.file_path.stat().st_mtime
             except Exception:
                 # Fallback if replace fails
                 if temp_path.exists():
@@ -115,12 +133,14 @@ class LocalPersistentStore:
 
     def collection(self, name):
         with self.lock:
+            self._check_reload()
             if name not in self.data:
                 self.data[name] = {}
         return LocalCollectionRef(self, name)
 
     def get_document(self, collection_name, doc_id):
         with self.lock:
+            self._check_reload()
             coll = self.data.get(collection_name, {})
             if doc_id in coll:
                 return DocumentSnapshot(doc_id, coll[doc_id], exists=True)
@@ -128,6 +148,7 @@ class LocalPersistentStore:
 
     def set_document(self, collection_name, doc_id, data, merge=False):
         with self.lock:
+            self._check_reload()
             if collection_name not in self.data:
                 self.data[collection_name] = {}
             if merge and doc_id in self.data[collection_name]:
@@ -139,6 +160,7 @@ class LocalPersistentStore:
 
     def update_document(self, collection_name, doc_id, updates):
         with self.lock:
+            self._check_reload()
             coll = self.data.get(collection_name, {})
             if doc_id not in coll:
                 raise KeyError(f"Document {doc_id} does not exist in {collection_name}")
@@ -148,6 +170,7 @@ class LocalPersistentStore:
 
     def delete_document(self, collection_name, doc_id):
         with self.lock:
+            self._check_reload()
             coll = self.data.get(collection_name, {})
             if doc_id in coll:
                 del coll[doc_id]
@@ -157,6 +180,7 @@ class LocalPersistentStore:
 
     def list_documents(self, collection_name):
         with self.lock:
+            self._check_reload()
             coll = self.data.get(collection_name, {})
             return [DocumentSnapshot(k, v, exists=True) for k, v in coll.items()]
 

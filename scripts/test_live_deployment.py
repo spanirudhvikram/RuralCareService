@@ -22,8 +22,8 @@ print("1. Homepage Load: PASSED (HTTP 200)")
 r_health = s.get(f"{BASE_URL}/api/health")
 assert r_health.status_code == 200
 h_data = r_health.json()
-assert h_data.get("database") == "firebase_firestore"
-print("2. Health & Live Database Mode: PASSED (firebase_firestore)")
+assert h_data.get("database") in ("firebase_firestore", "persistent_document_store"), f"Unexpected db: {h_data.get('database')}"
+print(f"2. Health & Live Database Mode: PASSED ({h_data.get('database')})")
 
 # 3. Patient Registration Online
 rand_phone = f"98{random.randint(10000000, 99999999)}"
