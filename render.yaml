@@ -1,0 +1,15 @@
+services:
+  - type: web
+    name: ruralcare-service
+    env: python
+    region: oregon
+    plan: free
+    buildCommand: pip install -r requirements.txt
+    startCommand: gunicorn app:app --bind 0.0.0.0:$PORT --workers 2 --timeout 120
+    envVars:
+      - key: FLASK_DEBUG
+        value: "False"
+      - key: FIREBASE_PROJECT_ID
+        value: ruralcare-f61e6
+      - key: SECRET_KEY
+        generateValue: true

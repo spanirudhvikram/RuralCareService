@@ -271,12 +271,21 @@ def init_db(force_reconnect=False):
         return _db_instance
 
     creds_path = Config.FIREBASE_CREDENTIALS_PATH
-    if creds_path and os.path.exists(creds_path):
+    creds_json = os.environ.get("FIREBASE_CREDENTIALS_JSON") or os.environ.get("FIREBASE_SERVICE_ACCOUNT_JSON")
+
+    if (creds_path and os.path.exists(creds_path)) or creds_json:
         try:
             import firebase_admin
             from firebase_admin import credentials, firestore
             if not firebase_admin._apps:
-                cred = credentials.Certificate(creds_path)
+                if creds_json:
+                    try:
+                        cred_dict = json.loads(creds_json)
+                        cred = credentials.Certificate(cred_dict)
+                    except Exception as je:
+                        raise ValueError(f"Invalid FIREBASE_CREDENTIALS_JSON format: {je}")
+                else:
+                    cred = credentials.Certificate(creds_path)
                 firebase_admin.initialize_app(cred, {"projectId": Config.FIREBASE_PROJECT_ID})
             raw_client = firestore.client()
 
@@ -319,7 +328,8 @@ def get_database_status():
     """
     is_fb = is_using_firebase()
     creds_path = Config.FIREBASE_CREDENTIALS_PATH
-    has_creds = bool(creds_path and os.path.exists(creds_path))
+    has_creds = bool((creds_path and os.path.exists(creds_path)) or os.environ.get("FIREBASE_CREDENTIALS_JSON"))
+    creds_source = "environment_json" if os.environ.get("FIREBASE_CREDENTIALS_JSON") else (creds_path if (creds_path and os.path.exists(creds_path)) else None)
     
     status = {
         "database_mode": "firebase_firestore" if is_fb else "persistent_document_store",
