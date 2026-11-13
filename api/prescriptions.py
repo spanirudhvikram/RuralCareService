@@ -34,7 +34,14 @@ def upload_prescription():
     Extracts and stores medicines with structured human/doctor verification.
     """
     db = get_db()
-    payload = request.get_json() or {}
+    if request.is_json:
+        payload = request.get_json() or {}
+    else:
+        payload = request.form.to_dict() if request.form else {}
+    if request.files and "file" in request.files:
+        uploaded_file = request.files["file"]
+        if uploaded_file.filename and not payload.get("file_name"):
+            payload["file_name"] = uploaded_file.filename
 
     journey_id = sanitize_text(payload.get("journey_id", ""))
     patient_id = sanitize_text(payload.get("patient_id", ""))
